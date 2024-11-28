@@ -29,6 +29,9 @@ async function Init_UI() {
     $('#aboutCmd').on("click", function () {
         showAbout();
     });
+    $('#loginCmd').on("click", function () {
+        showConnect();
+    });
     $("#showSearch").on('click', function () {
         toogleShowKeywords();
         showPosts();
@@ -100,6 +103,7 @@ function intialView() {
     $('#form').hide();
     $('#form').empty();
     $('#aboutContainer').hide();
+    $('#connectContainer').hide();
     $('#errorContainer').hide();
     showSearchIcon();
 }
@@ -159,6 +163,14 @@ function showAbout() {
     $('#abort').show();
     $("#viewTitle").text("À propos...");
     $("#aboutContainer").show();
+}
+function showConnect() {
+    hidePosts();
+    $("#hiddenIcon").show();
+    $("#hiddenIcon2").show();
+    $('#abort').show();
+    $("#viewTitle").text("Connexion");
+    $("#connectContainer").show();
 }
 
 //////////////////////////// Posts rendering /////////////////////////////////////////////////////////////
@@ -254,6 +266,13 @@ function updateDropDownMenu() {
     let DDMenu = $("#DDMenu");
     let selectClass = selectedCategory === "" ? "fa-check" : "fa-fw";
     DDMenu.empty();
+
+    DDMenu.append($(`
+        <div class="dropdown-item" id="loginCmd">
+                        <i class="menuIcon fa fa-sign-in mx-2"></i> Connexion
+                    </div>
+        `));
+    DDMenu.append($(`<div class="dropdown-divider"></div>`));
     DDMenu.append($(`
         <div class="dropdown-item menuItemLayout" id="allCatCmd">
             <i class="menuIcon fa ${selectClass} mx-2"></i> Toutes les catégories
@@ -276,6 +295,9 @@ function updateDropDownMenu() {
         `));
     $('#aboutCmd').on("click", function () {
         showAbout();
+    });
+    $('#loginCmd').on("click", function () {
+        showConnect();
     });
     $('#allCatCmd').on("click", async function () {
         selectedCategory = "";
@@ -533,3 +555,4 @@ function getFormData($form) {
     });
     return jsonObject;
 }
+//////////////////////// User /////////////////////////////////////////////////////////////////
