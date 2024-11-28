@@ -30,7 +30,7 @@ async function Init_UI() {
         showAbout();
     });
     $('#loginCmd').on("click", function () {
-        showConnect();
+        showConnectForm();
     });
     $("#showSearch").on('click', function () {
         toogleShowKeywords();
@@ -141,6 +141,15 @@ function showError(message, details = "") {
     $("#errorContainer").append($(`<div>${details}</div>`));
 }
 
+function showConnectForm() {
+    showForm();
+    $("#hiddenIcon").show();
+    $("#hiddenIcon2").show();
+    $('#commit').hide();
+    $("#viewTitle").text("Connexion");
+    renderConnectForm();
+}
+
 function showCreatePostForm() {
     showForm();
     $("#viewTitle").text("Ajout de nouvelle");
@@ -164,14 +173,7 @@ function showAbout() {
     $("#viewTitle").text("À propos...");
     $("#aboutContainer").show();
 }
-function showConnect() {
-    hidePosts();
-    $("#hiddenIcon").show();
-    $("#hiddenIcon2").show();
-    $('#abort').show();
-    $("#viewTitle").text("Connexion");
-    $("#connectContainer").show();
-}
+
 
 //////////////////////////// Posts rendering /////////////////////////////////////////////////////////////
 
@@ -297,7 +299,7 @@ function updateDropDownMenu() {
         showAbout();
     });
     $('#loginCmd').on("click", function () {
-        showConnect();
+        showConnectForm();
     });
     $('#allCatCmd').on("click", async function () {
         selectedCategory = "";
@@ -556,3 +558,72 @@ function getFormData($form) {
     return jsonObject;
 }
 //////////////////////// User /////////////////////////////////////////////////////////////////
+function newConnect() {
+    let connexion = {};
+    connexion.Email = "";
+    connexion.Password = "";
+    return connexion;
+}
+function renderConnectForm(user = null) {
+    let create = user == null;
+    if (create) user = newConnect();
+    $("#form").show();
+    $("#form").empty();
+    $("#form").append(`
+        <form class="form centered" id="connectForm">
+            <label for="Email" class="form-label">Connexion </label>
+            <input 
+                class="form-control full-width"
+                name="Email" 
+                id="Email" 
+                placeholder="Email"
+                required
+                RequireMessage="Veuillez entrer un Email"
+                InvalidMessage="Le titre comporte un caractère Email"
+                value="${user.Email}"
+            />
+            <input 
+                class="form-control full-width"
+                name="Password" 
+                id="Password" 
+                placeholder="Password"
+                required
+                RequireMessage="Veuillez entrer un Password"
+                InvalidMessage="Le titre comporte un caractère Password invalid"
+                value="${user.Password}"
+            />
+            <input type="submit" value="Se connecter" id="saveConnect" class="btn btn-primary full-width ">
+            <input type="button" value="Inscription" id="newConnect" class="btn btn-primary full-width ">
+        </form>
+        
+
+    `);
+    if (create) $("#keepDateControl").hide();
+
+    initImageUploaders();
+    initFormValidation(); // important do to after all html injection!
+
+    $("#commit").click(function () {
+        $("#commit").off();
+        return $('#savePost').trigger("click");
+    });
+    $('#postForm').on("submit", async function (event) {
+        event.preventDefault();
+        let post = getFormData($("#postForm"));
+        if (post.Category != selectedCategory)
+            selectedCategory = "";
+        if (create || !('keepDate' in post))
+            post.Date = Local_to_UTC(Date.now());
+        delete post.keepDate;
+        post = await Posts_API.Save(post, create);
+        if (!Posts_API.error) {
+            await showPosts();
+            postsPanel.scrollToElem(post.Id);
+        }
+        else
+            showError("Une erreur est survenue! ", Posts_API.currentHttpError);
+    });
+    $('#cancel').on("click", async function () {
+        await showPosts();
+    });
+}
