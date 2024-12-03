@@ -32,6 +32,9 @@ async function Init_UI() {
     $('#loginCmd').on("click", function () {
         showConnectForm();
     });
+    $('#signupCmd').on("click", function () {
+        showSignUpForm();
+    });
     $("#showSearch").on('click', function () {
         toogleShowKeywords();
         showPosts();
@@ -148,6 +151,14 @@ function showConnectForm() {
     $('#commit').hide();
     $("#viewTitle").text("Connexion");
     renderConnectForm();
+}
+function showSignUpForm() {
+    showForm();
+    $("#hiddenIcon").show();
+    $("#hiddenIcon2").show();
+    $('#commit').hide();
+    $("#viewTitle").text("Inscription");
+    renderSignUpForm();
 }
 
 function showCreatePostForm() {
@@ -564,6 +575,17 @@ function newConnect() {
     connexion.Password = "";
     return connexion;
 }
+function newSignUp() {
+    let signUp = {};
+    signUp.Name = "";
+    signUp.Email = "";
+    signUp.Password = "";
+    signUp.Avatar = "";
+    signUp.Created = "";
+    signUp.VerifyCode = "";
+    signUp.Authorizations = "";
+    return signUp;
+}
 function renderConnectForm(user = null) {
     let create = user == null;
     if (create) user = newConnect();
@@ -593,9 +615,10 @@ function renderConnectForm(user = null) {
                 value="${user.Password}"
             />
             <input type="submit" value="Se connecter" id="saveConnect" class="btn btn-primary full-width ">
-            <input type="button" value="Inscription" id="newConnect" class="btn btn-primary full-width ">
         </form>
-        
+        <div id="signupCmd">
+            <span class="btn btn-primary full-width ">  Inscription </span>
+        </div>
 
     `);
     if (create) $("#keepDateControl").hide();
@@ -626,4 +649,74 @@ function renderConnectForm(user = null) {
     $('#cancel').on("click", async function () {
         await showPosts();
     });
+    $('#signupCmd').on("click", function () {
+        showSignUpForm();
+    });
+}
+
+function renderSignUpForm(user = null) {
+    console.log("Signup Form");
+    let create = user == null;
+    if (create) user = newSignUp();
+    $("#form").show();
+    $("#form").empty();
+    $("#form").append(`
+        <form class="form centered" id="signUpForm">
+            <label for="Email" class="form-label">Inscription </label>
+            <input 
+                class="form-control full-width Email"
+                name="Email" 
+                id="Email" 
+                placeholder="Email"
+                required
+                RequireMessage="Veuillez entrer un Email"
+                InvalidMessage="Le titre comporte un caractère Email"
+                value="${user.Email}"
+            />
+            <input 
+                class="form-control full-width Email"
+                name="VerifyEmail" 
+                id="VerifyEmail" 
+                placeholder="Vérification"
+                required
+                RequireMessage="Veuillez entrer un Email"
+                InvalidMessage="Le titre comporte un caractère Email"
+                value="${user.Email}"
+            />
+            <label for="Password" class="form-label"> Mot de passe </label>
+            <input 
+                class="form-control full-width"
+                name="Password" 
+                id="Password" 
+                placeholder="Mot de passe"
+                required
+                RequireMessage="Veuillez entrer un mot de passe"
+                InvalidMessage="Le titre comporte un caractère Email"
+                value="${user.Password}"
+            />
+             <input 
+                class="form-control full-width"
+                name="VerifyPassword" 
+                id="VerifyPassword" 
+                placeholder="Vérification"
+                required
+                RequireMessage="Veuillez entrer un mot de passe"
+                InvalidMessage="Le titre comporte un caractère Email"
+                value="${user.Password}"
+            />
+
+            <input type="submit" value="Créer" id="saveUser" class="btn btn-primary full-width ">
+            
+        </form>
+        
+        
+
+    `);
+    
+    if (create) $("#keepDateControl").hide();
+
+    initImageUploaders();
+    //addConflictValidation();
+    initFormValidation();
+    
 }
