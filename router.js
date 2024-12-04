@@ -94,6 +94,7 @@ export const Registered_EndPoint = function (HttpContext) {
 
 export const TOKEN_EndPoint = function (HttpContext) {
     if (HttpContext.req.url == '/token' && HttpContext.req.method == "POST") {
+        console.log("Received POST request for /token");
         try {
             let accountsController = new AccountsController(HttpContext);
             if (HttpContext.payload)
