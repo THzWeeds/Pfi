@@ -3,6 +3,8 @@
 //////////////////////////////
 
 
+
+
 const periodicRefreshPeriod = 10;
 const waitingGifTrigger = 2000;
 const minKeywordLenth = 3;
@@ -600,7 +602,7 @@ function newSignUp() {
     signUp.Avatar = "no-avatar.png";
     signUp.Created = "";
     signUp.VerifyCode = "";
-    signUp.Authorizations = "";
+    signUp.Authorizations = {};
     return signUp;
 }
 function renderConnectForm(user = null) {
@@ -731,7 +733,7 @@ function renderSignUpForm(user = null) {
             <label for="Name" class="form-label"> Nom </label>
             <input 
                 class="form-control full-width"
-                name="Neme" 
+                name="Name" 
                 id="Name" 
                 placeholder="Nom"
                 required
@@ -743,7 +745,7 @@ function renderSignUpForm(user = null) {
             <div class='imageUploaderContainer'>
                 <div class='imageUploader' 
                      newImage='${create}' 
-                     controlId='Image' 
+                     controlId='Avatar' 
                      imageSrc='${user.Avatar}' 
                      waitingImage="Loading_icon.gif">
                 </div>
@@ -759,19 +761,27 @@ function renderSignUpForm(user = null) {
     if (create) $("#keepDateControl").hide();
 
     initImageUploaders();
-    //addConflictValidation();
+    addConflictValidation(Accounts_API.API_URL() + "/accounts/conflict","Email","saveUser");
     initFormValidation();
     
 
-    $('#postForm').on("submit", async function (event) {
+    $('#signUpForm').on("submit", async function (event) {
         event.preventDefault();
         let userform = getFormData($("#signUpForm"));
         
-        if (create)
-            userform.Created = Local_to_UTC(Date.now());
+        let user = {};
+        user.Name = userform.Name;
+        user.Email = userform.Email;
+        user.Password = userform.Password;
+        user.Avatar = userform.Avatar;
+        console.log(user);
+        let account = await Accounts_API.Save(user,create);
+        if (!Accounts_API.error) {
+            await showPosts();
+        }
+        else
+            showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
         
-        
-        await showPosts();
     });
     $('#cancel').on("click", async function () {
         await showPosts();

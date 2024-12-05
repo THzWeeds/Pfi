@@ -46,4 +46,24 @@ class Accounts_API {
     static isLogged() {
         return sessionStorage.getItem("User") && sessionStorage.getItem("Token");
     }
+
+    static async Save(data, create = true)
+    {
+        Accounts_API.initHttpState();
+        return new Promise(resolve => {
+            $.ajax({
+                url:create ? this.API_URL() + "/accounts/register":this.API_URL() + "/accounts/register/" + data.Id,
+                type: create ? "POST" : "PUT",
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: (data) => { resolve(data); },
+                error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
+            });
+
+
+        });
+    }
+
 }
+
+
