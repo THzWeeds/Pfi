@@ -2,6 +2,8 @@
 ////// 2024
 //////////////////////////////
 
+import AccountsController from "../../../controllers/AccountsController";
+
 const periodicRefreshPeriod = 10;
 const waitingGifTrigger = 2000;
 const minKeywordLenth = 3;
@@ -580,7 +582,7 @@ function newSignUp() {
     signUp.Name = "";
     signUp.Email = "";
     signUp.Password = "";
-    signUp.Avatar = "";
+    signUp.Avatar = "no-avatar.png";
     signUp.Created = "";
     signUp.VerifyCode = "";
     signUp.Authorizations = "";
@@ -692,7 +694,7 @@ function renderSignUpForm(user = null) {
                 required
                 RequireMessage="Veuillez entrer un mot de passe"
                 InvalidMessage="Le titre comporte un caractère Email"
-                value="${user.Password}"
+                value=""
             />
              <input 
                 class="form-control full-width"
@@ -702,9 +704,29 @@ function renderSignUpForm(user = null) {
                 required
                 RequireMessage="Veuillez entrer un mot de passe"
                 InvalidMessage="Le titre comporte un caractère Email"
-                value="${user.Password}"
+                value=""
             />
 
+            <label for="Name" class="form-label"> Nom </label>
+            <input 
+                class="form-control full-width"
+                name="Neme" 
+                id="Name" 
+                placeholder="Nom"
+                required
+                RequireMessage="Veuillez entrer un nom"
+                InvalidMessage="Le titre comporte un caractère illégal"
+                value="${user.Name}"
+            />
+            <label class="form-label">Avatar </label>
+            <div class='imageUploaderContainer'>
+                <div class='imageUploader' 
+                     newImage='${create}' 
+                     controlId='Image' 
+                     imageSrc='${user.Avatar}' 
+                     waitingImage="Loading_icon.gif">
+                </div>
+            </div>
             <input type="submit" value="Créer" id="saveUser" class="btn btn-primary full-width ">
             
         </form>
@@ -719,4 +741,18 @@ function renderSignUpForm(user = null) {
     //addConflictValidation();
     initFormValidation();
     
+
+    $('#postForm').on("submit", async function (event) {
+        event.preventDefault();
+        let userform = getFormData($("#signUpForm"));
+        
+        if (create)
+            userform.Created = Local_to_UTC(Date.now());
+        
+        
+        await showPosts();
+    });
+    $('#cancel').on("click", async function () {
+        await showPosts();
+    });
 }
