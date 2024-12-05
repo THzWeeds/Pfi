@@ -2,7 +2,6 @@
 ////// 2024
 //////////////////////////////
 
-import AccountsController from "../../../controllers/AccountsController";
 
 const periodicRefreshPeriod = 10;
 const waitingGifTrigger = 2000;
@@ -31,8 +30,8 @@ async function Init_UI() {
     $('#aboutCmd').on("click", function () {
         showAbout();
     });
-    $('#loginCmd').on("click", function () {
-        showConnectForm();
+    $('#logoutCmd').on("click", function () {
+        console.log("logout");
     });
     $('#signupCmd').on("click", function () {
         showSignUpForm();
@@ -282,11 +281,24 @@ function updateDropDownMenu() {
     let selectClass = selectedCategory === "" ? "fa-check" : "fa-fw";
     DDMenu.empty();
 
-    DDMenu.append($(`
-        <div class="dropdown-item" id="loginCmd">
-                        <i class="menuIcon fa fa-sign-in mx-2"></i> Connexion
-                    </div>
-        `));
+    
+    let isLoggedIn = Accounts_API.isLogged();
+    if (isLoggedIn) {
+        console.log("The user is logged in.");
+        DDMenu.append($(`
+            <div class="dropdown-item" id="logoutCmd">
+                            <i class="menuIcon fa fa-sign-in mx-2"></i> Logout
+                        </div>
+            `));
+    } else {
+        DDMenu.append($(`
+            <div class="dropdown-item" id="loginCmd">
+                            <i class="menuIcon fa fa-sign-in mx-2"></i> Connexion
+                        </div>
+            `));
+    }
+    
+
     DDMenu.append($(`<div class="dropdown-divider"></div>`));
     DDMenu.append($(`
         <div class="dropdown-item menuItemLayout" id="allCatCmd">
@@ -313,6 +325,9 @@ function updateDropDownMenu() {
     });
     $('#loginCmd').on("click", function () {
         showConnectForm();
+    });
+    $('#logoutCmd').on("click", function () {
+        console.log("logout");
     });
     $('#allCatCmd').on("click", async function () {
         selectedCategory = "";
@@ -602,19 +617,16 @@ function renderConnectForm(user = null) {
                 id="Email" 
                 placeholder="Email"
                 required
-                RequireMessage="Veuillez entrer un Email"
-                InvalidMessage="Le titre comporte un caractère Email"
-                value="${user.Email}"
+                value="${user.Email || ''}"
             />
+            <div id="error-message-email" class="text-danger"></div>
             <input 
                 class="form-control full-width"
                 name="Password" 
                 id="Password" 
                 placeholder="Password"
                 required
-                RequireMessage="Veuillez entrer un Password"
-                InvalidMessage="Le titre comporte un caractère Password invalid"
-                value="${user.Password}"
+                value="${user.Password || ''}"
             />
             <input type="submit" value="Se connecter" id="saveConnect" class="btn btn-primary full-width ">
         </form>
@@ -623,30 +635,39 @@ function renderConnectForm(user = null) {
         </div>
 
     `);
-    if (create) $("#keepDateControl").hide();
 
-    initImageUploaders();
-    initFormValidation(); // important do to after all html injection!
-
-    $("#commit").click(function () {
-        $("#commit").off();
-        return $('#savePost').trigger("click");
-    });
-    $('#postForm').on("submit", async function (event) {
+    $('#connectForm').on("submit", async function (event) {
         event.preventDefault();
-        let post = getFormData($("#postForm"));
-        if (post.Category != selectedCategory)
-            selectedCategory = "";
-        if (create || !('keepDate' in post))
-            post.Date = Local_to_UTC(Date.now());
-        delete post.keepDate;
-        post = await Posts_API.Save(post, create);
-        if (!Posts_API.error) {
-            await showPosts();
-            postsPanel.scrollToElem(post.Id);
+
+        let email = $('#Email').val();
+        let password = $('#Password').val();
+        let loginInfo = { Email: email, Password: password };
+
+        let result = await Accounts_API.postLogin(loginInfo);
+
+        if (!result.success) {
+            console.log(result.status);
+            if (result.status === 481) {
+                $('#error-message-email').text(result.error);
+            } else if (result.status === 482) {
+                $('#error-message-password').text(result.error);
+            } else {
+                console.log("Unexpected error:", result.error);
+            }
+        } else {
+            console.log("Login successful!", result.data);
+            if (result.data && result.data.Access_token) {
+
+                sessionStorage.setItem("Token", result.data.Access_token);
+                sessionStorage.setItem("User", JSON.stringify(result.data.User));
+
+                console.log(result);
+
+                window.location.href = 'file:///C:/Users/PC/Desktop/Reseau/API-Server-2.000---2024-main/wwwroot/Posts/index.html';
+            } else {
+                console.log("An unexpected error occurred.");
+            }
         }
-        else
-            showError("Une erreur est survenue! ", Posts_API.currentHttpError);
     });
     $('#cancel').on("click", async function () {
         await showPosts();
