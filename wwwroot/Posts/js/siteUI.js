@@ -32,7 +32,7 @@ async function Init_UI() {
         showAbout();
     });
     $('#logoutCmd').on("click", function () {
-        console.log("logout");
+        Accounts_API.Logout();
     });
     $("#showSearch").on('click', function () {
         toogleShowKeywords();
@@ -274,7 +274,6 @@ function updateDropDownMenu() {
     
     let isLoggedIn = Accounts_API.isLogged();
     if (isLoggedIn) {
-        console.log("The user is logged in.");
         DDMenu.append($(`
             <div class="dropdown-item" id="logoutCmd">
                             <i class="menuIcon fa fa-sign-in mx-2"></i> Logout
@@ -317,7 +316,12 @@ function updateDropDownMenu() {
         showConnectForm();
     });
     $('#logoutCmd').on("click", function () {
-        console.log("logout");
+        Accounts_API.Logout();
+        if(!Accounts_API.error)
+        {
+            sessionStorage.clear();
+            showPosts();
+        }
     });
     $('#allCatCmd').on("click", async function () {
         selectedCategory = "";
@@ -602,6 +606,7 @@ async function renderConnectForm(user = null) {
             <div id="error-message-email" class="text-danger"></div>
             <input 
                 class="form-control full-width"
+                type="password"
                 name="Password" 
                 id="Password" 
                 placeholder="Password"
@@ -624,22 +629,20 @@ async function renderConnectForm(user = null) {
         let result = await Accounts_API.postLogin(loginInfo);
 
         if (!result.success) {
-            console.log(result.status);
             if (result.status === 481) {
-                $('#error-message-email').text(result.error);
+                $('#error-message-email').text("Courriel introuvable");
+                $('#error-message-password').text("");
             } else if (result.status === 482) {
-                $('#error-message-password').text(result.error);
+                $('#error-message-password').text("Mot de passe inccorect");
+                $('#error-message-email').text("");
             } else {
                 console.log("Unexpected error:", result.error);
             }
         } else {
-            console.log("Login successful!", result.data);
             if (result.data && result.data.Access_token) {
 
                 sessionStorage.setItem("Token", result.data.Access_token);
                 sessionStorage.setItem("User", JSON.stringify(result.data.User));
-
-                console.log(result);
 
                 window.location.href = 'file:///C:/Users/PC/Desktop/Reseau/API-Server-2.000---2024-main/wwwroot/Posts/index.html';
             } else {
