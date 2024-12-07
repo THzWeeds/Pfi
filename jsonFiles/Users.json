@@ -79,5 +79,18 @@
         },
         "VerifyCode": "verified",
         "Id": "f11ee960-aa82-11ef-b942-e7f097a2ee7a"
+    },
+    {
+        "Id": "e5344fa0-b324-11ef-8c00-53d6716a3a61",
+        "Name": "lalala",
+        "Email": "lalala@gmail.com",
+        "Password": "12345",
+        "Avatar": "e5344fa1-b324-11ef-8c00-53d6716a3a61.png",
+        "Created": 1733415652,
+        "VerifyCode": 349484,
+        "Authorizations": {
+            "readAccess": 1,
+            "writeAccess": 1
+        }
     }
 ]

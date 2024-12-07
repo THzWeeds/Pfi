@@ -4,6 +4,7 @@
 
 
 
+
 const periodicRefreshPeriod = 10;
 const waitingGifTrigger = 2000;
 const minKeywordLenth = 3;
@@ -33,6 +34,9 @@ async function Init_UI() {
     });
     $('#logoutCmd').on("click", function () {
         console.log("logout");
+    });
+    $('#signupCmd').on("click", function () {
+        showSignUpForm();
     });
     $("#showSearch").on('click', function () {
         toogleShowKeywords();
@@ -150,6 +154,14 @@ function showConnectForm() {
     $('#commit').hide();
     $("#viewTitle").text("Connexion");
     renderConnectForm();
+}
+function showSignUpForm() {
+    showForm();
+    $("#hiddenIcon").show();
+    $("#hiddenIcon2").show();
+    $('#commit').hide();
+    $("#viewTitle").text("Inscription");
+    renderSignUpForm();
 }
 
 function showCreatePostForm() {
@@ -582,8 +594,18 @@ function newConnect() {
     connexion.Password = "";
     return connexion;
 }
-
-async function renderConnectForm(user = null) {
+function newSignUp() {
+    let signUp = {};
+    signUp.Name = "";
+    signUp.Email = "";
+    signUp.Password = "";
+    signUp.Avatar = "no-avatar.png";
+    signUp.Created = "";
+    signUp.VerifyCode = "";
+    signUp.Authorizations = {};
+    return signUp;
+}
+function renderConnectForm(user = null) {
     let create = user == null;
     if (create) user = newConnect();
     $("#form").show();
@@ -608,10 +630,12 @@ async function renderConnectForm(user = null) {
                 required
                 value="${user.Password || ''}"
             />
-            <div id="error-message-password" class="text-danger"></div>
-            <input type="submit" value="Se connecter" id="saveConnect" class="btn btn-primary full-width">
-            <input type="button" value="Inscription" id="newConnect" class="btn btn-primary full-width">
+            <input type="submit" value="Se connecter" id="saveConnect" class="btn btn-primary full-width ">
         </form>
+        <div id="signupCmd">
+            <span class="btn btn-primary full-width ">  Inscription </span>
+        </div>
+
     `);
 
     $('#connectForm').on("submit", async function (event) {
@@ -647,11 +671,156 @@ async function renderConnectForm(user = null) {
             }
         }
     });
+    $('#cancel').on("click", async function () {
+        await showPosts();
+    });
+    $('#signupCmd').on("click", function () {
+        showSignUpForm();
+    });
 }
 
+function renderSignUpForm(user = null) {
+    console.log("Signup Form");
+    let create = user == null;
+    if (create) user = newSignUp();
+    $("#form").show();
+    $("#form").empty();
+    $("#form").append(`
+        <form class="form centered" id="signUpForm">
+            <label for="Email" class="form-label">Inscription </label>
+            <input 
+                class="form-control full-width Email"
+                name="Email" 
+                id="Email" 
+                placeholder="Email"
+                required
+                RequireMessage="Veuillez entrer un Email"
+                InvalidMessage="Le titre comporte un caractère Email"
+                value="${user.Email}"
+            />
+            <input 
+                class="form-control full-width Email"
+                name="VerifyEmail" 
+                id="VerifyEmail" 
+                placeholder="Vérification"
+                required
+                RequireMessage="Veuillez entrer un Email"
+                InvalidMessage="Le titre comporte un caractère Email"
+                value="${user.Email}"
+            />
+            <div id="error-message-email" class="text-danger"></div>
+            <label for="Password" class="form-label"> Mot de passe </label>
+            <input 
+                class="form-control full-width"
+                name="Password" 
+                id="Password" 
+                placeholder="Mot de passe"
+                required
+                RequireMessage="Veuillez entrer un mot de passe"
+                InvalidMessage="Le titre comporte un caractère Email"
+                value=""
+            />
+             <input 
+                class="form-control full-width"
+                name="VerifyPassword" 
+                id="VerifyPassword" 
+                placeholder="Vérification"
+                required
+                RequireMessage="Veuillez entrer un mot de passe"
+                InvalidMessage="Le titre comporte un caractère Email"
+                value=""
+            />
+            <div id="error-message-password" class="text-danger"></div>
+            <label for="Name" class="form-label"> Nom </label>
+            <input 
+                class="form-control full-width"
+                name="Name" 
+                id="Name" 
+                placeholder="Nom"
+                required
+                RequireMessage="Veuillez entrer un nom"
+                InvalidMessage="Le titre comporte un caractère illégal"
+                value="${user.Name}"
+            />
+            <label class="form-label">Avatar </label>
+            <div class='imageUploaderContainer'>
+                <div class='imageUploader' 
+                     newImage='${create}' 
+                     controlId='Avatar' 
+                     imageSrc='${user.Avatar}' 
+                     waitingImage="Loading_icon.gif">
+                </div>
+            </div>
+            <input type="submit" value="Créer" id="saveUser" class="btn btn-primary full-width ">
+            
+        </form>
+        
+        
 
-// Cancel button handler (unchanged)
-$('#cancel').on("click", async function () {
-    await showPosts();
-});
+    `);
+    
+    if(!create)
+    {
+        $("#form").append(` 
+            <input type="button" value="Effacer ce compte" id="deleteUser" class="btn btn-primary full-width">
+            `);
+    }
+    $("#form").append(` 
+        <input type="button" value="Annuler" id="cancel" class="btn btn-primary full-width">
+        `);
+    if (create) $("#keepDateControl").hide();
 
+    initImageUploaders();
+    addConflictValidation(Accounts_API.API_URL() + "/accounts/conflict","Email","saveUser");
+    initFormValidation();
+    $('#cancel').on("click", async function (event) {
+        await showPosts();
+    });
+
+    $('#signUpForm').on("submit", async function (event) {
+        event.preventDefault();
+        let userform = getFormData($("#signUpForm"));
+        let error =false;
+        if (userform.Email != userform.VerifyEmail)
+        {
+            error = true;
+            $('#error-message-email').text("Les courriels entré ne sont pas identiques");
+            //showError("Une erreur est survenue! ", "Les courriels entré ne sont pas identiques");
+        }
+        else
+        {
+            $('#error-message-email').empty();
+        }
+        if (userform.Password != userform.VerifyPassword)
+        {
+            error = true;
+            $('#error-message-password').text("Les mots de passes ne sont pas identiques");
+            //showError("Une erreur est survenue! ", "Les mots de passes ne sont pas identiques");
+        }
+        else
+        {
+            $('#error-message-password').empty();
+        }
+        let user = {};
+        user.Name = userform.Name;
+        user.Email = userform.Email;
+        user.Password = userform.Password;
+        user.Avatar = userform.Avatar;
+        console.log(user);
+
+        if (!error)
+        {
+            let account = await Accounts_API.Save(user,create);
+            if (!Accounts_API.error) {
+                await showPosts();
+            }
+            else
+                showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
+        }
+        
+        return;
+    });
+    $('#cancel').on("click", async function () {
+        await showPosts();
+    });
+}
