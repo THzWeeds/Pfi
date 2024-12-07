@@ -708,6 +708,7 @@ function renderSignUpForm(user = null) {
                 InvalidMessage="Le titre comporte un caractère Email"
                 value="${user.Email}"
             />
+            <div id="error-message-email" class="text-danger"></div>
             <label for="Password" class="form-label"> Mot de passe </label>
             <input 
                 class="form-control full-width"
@@ -729,7 +730,7 @@ function renderSignUpForm(user = null) {
                 InvalidMessage="Le titre comporte un caractère Email"
                 value=""
             />
-
+            <div id="error-message-password" class="text-danger"></div>
             <label for="Name" class="form-label"> Nom </label>
             <input 
                 class="form-control full-width"
@@ -758,30 +759,66 @@ function renderSignUpForm(user = null) {
 
     `);
     
+    if(!create)
+    {
+        $("#form").append(` 
+            <input type="button" value="Effacer ce compte" id="deleteUser" class="btn btn-primary full-width">
+            `);
+    }
+    $("#form").append(` 
+        <input type="button" value="Annuler" id="cancel" class="btn btn-primary full-width">
+        `);
     if (create) $("#keepDateControl").hide();
 
     initImageUploaders();
     addConflictValidation(Accounts_API.API_URL() + "/accounts/conflict","Email","saveUser");
     initFormValidation();
-    
+    $('#cancel').on("click", async function (event) {
+        await showPosts();
+    });
 
     $('#signUpForm').on("submit", async function (event) {
         event.preventDefault();
         let userform = getFormData($("#signUpForm"));
-        
+        let error =false;
+        if (userform.Email != userform.VerifyEmail)
+        {
+            error = true;
+            $('#error-message-email').text("Les courriels entré ne sont pas identiques");
+            //showError("Une erreur est survenue! ", "Les courriels entré ne sont pas identiques");
+        }
+        else
+        {
+            $('#error-message-email').empty();
+        }
+        if (userform.Password != userform.VerifyPassword)
+        {
+            error = true;
+            $('#error-message-password').text("Les mots de passes ne sont pas identiques");
+            //showError("Une erreur est survenue! ", "Les mots de passes ne sont pas identiques");
+        }
+        else
+        {
+            $('#error-message-password').empty();
+        }
         let user = {};
         user.Name = userform.Name;
         user.Email = userform.Email;
         user.Password = userform.Password;
         user.Avatar = userform.Avatar;
         console.log(user);
-        let account = await Accounts_API.Save(user,create);
-        if (!Accounts_API.error) {
-            await showPosts();
+
+        if (!error)
+        {
+            let account = await Accounts_API.Save(user,create);
+            if (!Accounts_API.error) {
+                await showPosts();
+            }
+            else
+                showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
         }
-        else
-            showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
         
+        return;
     });
     $('#cancel').on("click", async function () {
         await showPosts();
