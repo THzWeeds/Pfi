@@ -665,7 +665,7 @@ function renderConnectForm(user = null) {
 
                 console.log(result);
 
-                window.location.href = 'file:///C:/Users/PC/Desktop/Reseau/API-Server-2.000---2024-main/wwwroot/Posts/index.html';
+                window.location.href = 'index.html';
             } else {
                 console.log("An unexpected error occurred.");
             }
@@ -819,6 +819,40 @@ function renderSignUpForm(user = null) {
         }
         
         return;
+    });
+    $('#cancel').on("click", async function () {
+        await showPosts();
+    });
+    $('#deleteUser').on("click", async function () {
+        await showPosts();
+    });
+}
+
+function showDeletePostForm(id) {
+    showForm();
+    $("#viewTitle").text("Effacer le compter");
+    renderDeleteUserForm(id);
+}
+
+async function renderDeleteUserForm(id)
+{
+    let response = await Posts_API.Get(id);
+    if (!Posts_API.error)
+    {
+        $("#form").append(`
+            <div>Voulez-vous effacer cet utilisateur</div>
+
+        `);
+    }
+    $('#commit').on("click", async function () {
+        await Accounts_API.Delete(post.Id);
+        if (!Accounts_API.error) {
+            await showPosts();
+        }
+        else {
+            console.log(Accounts_API.currentHttpError)
+            showError("Une erreur est survenue!");
+        }
     });
     $('#cancel').on("click", async function () {
         await showPosts();
