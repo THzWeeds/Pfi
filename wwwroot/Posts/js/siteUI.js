@@ -36,8 +36,8 @@ async function Init_UI() {
     $('#modifierProfileCmd').on("click", function () {
         console.log("modifierProfile");
     });
-    $('#logoutCmd').on("click", function () {
-        Accounts_API.Logout();
+    $('#gererUserCmd').on("click", function () {
+        showGererUser();
     });
     $('#signupCmd').on("click", function () {
         showSignUpForm();
@@ -158,6 +158,14 @@ function showConnectForm() {
     $('#commit').hide();
     $("#viewTitle").text("Connexion");
     renderConnectForm();
+}
+function showGererUser() {
+    showForm();
+    $("#hiddenIcon").show();
+    $("#hiddenIcon2").show();
+    $('#commit').hide();
+    $("#viewTitle").text("Connexion");
+    renderGererUser();
 }
 function showSignUpForm() {
     showForm();
@@ -315,6 +323,7 @@ function updateDropDownMenu() {
     
     let isLoggedIn = Accounts_API.isLogged();
     if (isLoggedIn) {
+        
 
         DDMenu.append($(`
             <div class="dropdown-item" id="modifierProfileCmd">
@@ -322,6 +331,18 @@ function updateDropDownMenu() {
                         </div>
             `));
         DDMenu.append($(`<div class="dropdown-divider"></div>`));
+
+        let isAdmin =  Accounts_API.isAdmin();
+        if(isAdmin)
+        {
+            DDMenu.append($(`
+                <div class="dropdown-item" id="gererUserCmd">
+                                <i class="menuIcon fa fa-user-pen mx-2"></i> Gestions des usagers
+                            </div>
+                `));
+            DDMenu.append($(`<div class="dropdown-divider"></div>`));
+        }
+
         DDMenu.append($(`
             <div class="dropdown-item" id="modifierProfileCmd">
                             <i class="menuIcon fa fa-user-pen mx-2"></i> Modifier votre profil
@@ -378,6 +399,9 @@ function updateDropDownMenu() {
             sessionStorage.clear();
             showPosts();
         }
+    });
+    $('#gererUserCmd').on("click", function () {
+        showGererUser();
     });
     $('#allCatCmd').on("click", async function () {
         selectedCategory = "";
@@ -652,6 +676,21 @@ function newSignUp() {
     signUp.VerifyCode = "";
     signUp.Authorizations = {};
     return signUp;
+}
+function renderGererUser(user = null) {
+    let create = user == null;
+    if (create) user = newConnect();
+    $("#form").show();
+    $("#form").empty();
+    $("#form").append(`
+        <div>
+            <span>  zzzz </span>
+        </div>
+
+    `);
+    $('#cancel').on("click", async function () {
+        await showPosts();
+    });
 }
 function renderConnectForm(user = null) {
     let create = user == null;
