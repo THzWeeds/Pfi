@@ -14,6 +14,7 @@ let categories = [];
 let selectedCategory = "";
 let currentETag = "";
 let periodic_Refresh_paused = false;
+let currentPostsCount = 0;
 let postsPanel;
 let itemLayout;
 let waiting = null;
@@ -32,8 +33,11 @@ async function Init_UI() {
     $('#aboutCmd').on("click", function () {
         showAbout();
     });
-    $('#logoutCmd').on("click", function () {
-        console.log("logout");
+    $('#modifierProfileCmd').on("click", function () {
+        console.log("modifierProfile");
+    });
+    $('#gererUserCmd').on("click", function () {
+        showGererUser();
     });
     $('#signupCmd').on("click", function () {
         showSignUpForm();
@@ -155,6 +159,14 @@ function showConnectForm() {
     $("#viewTitle").text("Connexion");
     renderConnectForm();
 }
+function showGererUser() {
+    showForm();
+    $("#hiddenIcon").show();
+    $("#hiddenIcon2").show();
+    $('#commit').hide();
+    $("#viewTitle").text("Connexion");
+    renderGererUser();
+}
 function showSignUpForm() {
     showForm();
     $("#hiddenIcon").show();
@@ -204,6 +216,31 @@ function start_Periodic_Refresh() {
         }
     },
         periodicRefreshPeriod * 1000);
+}function start_Periodic_Refresh() {
+    $("#reloadPosts").addClass('white');
+    $("#reloadPosts").on('click', async function () {
+        $("#reloadPosts").addClass('white');
+        postsPanel.resetScrollPosition();
+        await showPosts();
+    })
+    setInterval(async () => {
+        if (!periodic_Refresh_paused) {
+            let etag = await Posts_API.HEAD();
+            // the etag contain the number of model records in the following form
+            // xxx-etag
+            let postsCount = parseInt(etag.split("-")[0]);
+            if (currentETag != etag) {           
+                if (postsCount != currentPostsCount) {
+                    console.log("postsCount", postsCount)
+                    currentPostsCount = postsCount;
+                    $("#reloadPosts").removeClass('white');
+                } else
+                    await showPosts();
+                currentETag = etag;
+            }
+        }
+    },
+        periodicRefreshPeriod * 1000);
 }
 async function renderPosts(queryString) {
     let endOfData = false;
@@ -216,13 +253,13 @@ async function renderPosts(queryString) {
             queryString += "&keywords=" + $("#searchKeys").val().replace(/[ ]/g, ',')
     }
     addWaitingGif();
-    let response = await Posts_API.Get(queryString);
+    let response = await Posts_API.GetQuery(queryString);
     if (!Posts_API.error) {
         currentETag = response.ETag;
         let Posts = response.data;
         if (Posts.length > 0) {
             Posts.forEach(Post => {
-                postsPanel.itemsPanel.append(renderPost(Post));
+                postsPanel.append(renderPost(Post));
             });
         } else
             endOfData = true;
@@ -286,10 +323,34 @@ function updateDropDownMenu() {
     
     let isLoggedIn = Accounts_API.isLogged();
     if (isLoggedIn) {
-        console.log("The user is logged in.");
+        
+
+        DDMenu.append($(`
+            <div class="dropdown-item" id="modifierProfileCmd">
+                            <img src="${Accounts_API.getAvatar()}" alt="Avatar" class="UserAvatarXSmall"> ${Accounts_API.getUserName()}
+                        </div>
+            `));
+        DDMenu.append($(`<div class="dropdown-divider"></div>`));
+
+        let isAdmin =  Accounts_API.isAdmin();
+        if(isAdmin)
+        {
+            DDMenu.append($(`
+                <div class="dropdown-item" id="gererUserCmd">
+                                <i class="menuIcon fa fa-user-pen mx-2"></i> Gestions des usagers
+                            </div>
+                `));
+            DDMenu.append($(`<div class="dropdown-divider"></div>`));
+        }
+
+        DDMenu.append($(`
+            <div class="dropdown-item" id="modifierProfileCmd">
+                            <i class="menuIcon fa fa-user-pen mx-2"></i> Modifier votre profil
+                        </div>
+            `));
         DDMenu.append($(`
             <div class="dropdown-item" id="logoutCmd">
-                            <i class="menuIcon fa fa-sign-in mx-2"></i> Logout
+                            <i class="menuIcon fa fa-sign-out mx-2"></i> Logout
                         </div>
             `));
     } else {
@@ -328,8 +389,19 @@ function updateDropDownMenu() {
     $('#loginCmd').on("click", function () {
         showConnectForm();
     });
+    $('#modifierProfileCmd').on("click", function () {
+        console.log("modifierProfile");
+    });
     $('#logoutCmd').on("click", function () {
-        console.log("logout");
+        Accounts_API.Logout();
+        if(!Accounts_API.error)
+        {
+            sessionStorage.clear();
+            showPosts();
+        }
+    });
+    $('#gererUserCmd').on("click", function () {
+        showGererUser();
     });
     $('#allCatCmd').on("click", async function () {
         selectedCategory = "";
@@ -605,6 +677,21 @@ function newSignUp() {
     signUp.Authorizations = {};
     return signUp;
 }
+function renderGererUser(user = null) {
+    let create = user == null;
+    if (create) user = newConnect();
+    $("#form").show();
+    $("#form").empty();
+    $("#form").append(`
+        <div>
+            <span>  zzzz </span>
+        </div>
+
+    `);
+    $('#cancel').on("click", async function () {
+        await showPosts();
+    });
+}
 function renderConnectForm(user = null) {
     let create = user == null;
     if (create) user = newConnect();
@@ -624,6 +711,7 @@ function renderConnectForm(user = null) {
             <div id="error-message-email" class="text-danger"></div>
             <input 
                 class="form-control full-width"
+                type="password"
                 name="Password" 
                 id="Password" 
                 placeholder="Password"
@@ -648,22 +736,20 @@ function renderConnectForm(user = null) {
         let result = await Accounts_API.postLogin(loginInfo);
 
         if (!result.success) {
-            console.log(result.status);
             if (result.status === 481) {
-                $('#error-message-email').text(result.error);
+                $('#error-message-email').text("Courriel introuvable");
+                $('#error-message-password').text("");
             } else if (result.status === 482) {
-                $('#error-message-password').text(result.error);
+                $('#error-message-password').text("Mot de passe inccorect");
+                $('#error-message-email').text("");
             } else {
                 console.log("Unexpected error:", result.error);
             }
         } else {
-            console.log("Login successful!", result.data);
             if (result.data && result.data.Access_token) {
 
                 sessionStorage.setItem("Token", result.data.Access_token);
                 sessionStorage.setItem("User", JSON.stringify(result.data.User));
-
-                console.log(result);
 
                 window.location.href = 'file:///C:/Users/PC/Desktop/Reseau/API-Server-2.000---2024-main/wwwroot/Posts/index.html';
             } else {
