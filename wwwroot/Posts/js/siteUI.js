@@ -677,21 +677,26 @@ function newSignUp() {
     signUp.Authorizations = {};
     return signUp;
 }
-function renderGererUser(user = null) {
-    let create = user == null;
-    if (create) user = newConnect();
+async function renderGererUser(user = null) {
+    const users = await Accounts_API.GetAllUsers(); 
+    console.log(users);
+
     $("#form").show();
     $("#form").empty();
-    $("#form").append(`
-        <div>
-            <span>  zzzz </span>
-        </div>
 
-    `);
+    users.forEach(user => {
+        $("#form").append(`
+            <div>
+                <span>${user.Name}</span>
+            </div>
+        `);
+    });
+
     $('#cancel').on("click", async function () {
         await showPosts();
     });
 }
+
 function renderConnectForm(user = null) {
     let create = user == null;
     if (create) user = newConnect();

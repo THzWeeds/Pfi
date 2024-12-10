@@ -66,6 +66,10 @@ class Accounts_API {
     {
         return this.retrieveUser().Id;
     }
+    static getToken()
+    {
+        return sessionStorage.getItem("Token");
+    }
     static async Logout() {
         Accounts_API.initHttpState();
     
@@ -93,6 +97,18 @@ class Accounts_API {
         });
     }
     
+    static async GetAllUsers(id = null) {
+        Accounts_API.initHttpState();
+        let token = this.getToken();
+        return new Promise(resolve => {
+            $.ajax({
+                url: this.API_URL() +"/accounts" + (id != null ? "/" + id : ""),
+                headers: {"authorization" : token},
+                complete: data => { resolve(data); },
+                error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
+            });
+        });
+    }
 
     static async Save(data, create = true)
     {
