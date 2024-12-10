@@ -35,6 +35,7 @@ async function Init_UI() {
     });
     $('#modifierProfileCmd').on("click", function () {
         console.log("modifierProfile");
+        showUserEditForm();
     });
     $('#gererUserCmd').on("click", function () {
         showGererUser();
@@ -174,6 +175,15 @@ function showSignUpForm() {
     $('#commit').hide();
     $("#viewTitle").text("Inscription");
     renderSignUpForm();
+}
+
+function showUserEditForm() {
+    showForm();
+    $("#hiddenIcon").show();
+    $("#hiddenIcon2").show();
+    $('#commit').hide();
+    $("#viewTitle").text("Modifier");
+    renderSignUpForm(Accounts_API.retrieveUser());
 }
 
 function showCreatePostForm() {
@@ -391,6 +401,7 @@ function updateDropDownMenu() {
     });
     $('#modifierProfileCmd').on("click", function () {
         console.log("modifierProfile");
+        showUserEditForm();
     });
     $('#logoutCmd').on("click", function () {
         Accounts_API.Logout();
@@ -756,7 +767,9 @@ function renderConnectForm(user = null) {
                 sessionStorage.setItem("Token", result.data.Access_token);
                 sessionStorage.setItem("User", JSON.stringify(result.data.User));
 
-                window.location.href = 'file:///C:/Users/PC/Desktop/Reseau/API-Server-2.000---2024-main/wwwroot/Posts/index.html';
+                console.log(result);
+
+                window.location.href = 'index.html';
             } else {
                 console.log("An unexpected error occurred.");
             }
@@ -903,6 +916,7 @@ function renderSignUpForm(user = null) {
         {
             let account = await Accounts_API.Save(user,create);
             if (!Accounts_API.error) {
+                sessionStorage.setItem("User", JSON.stringify(account));
                 await showPosts();
             }
             else
@@ -910,6 +924,40 @@ function renderSignUpForm(user = null) {
         }
         
         return;
+    });
+    $('#cancel').on("click", async function () {
+        await showPosts();
+    });
+    $('#deleteUser').on("click", async function () {
+        await showPosts();
+    });
+}
+
+function showDeletePostForm(id) {
+    showForm();
+    $("#viewTitle").text("Effacer le compter");
+    renderDeleteUserForm(id);
+}
+
+async function renderDeleteUserForm(id)
+{
+    let response = await Posts_API.Get(id);
+    if (!Posts_API.error)
+    {
+        $("#form").append(`
+            <div>Voulez-vous effacer cet utilisateur</div>
+
+        `);
+    }
+    $('#commit').on("click", async function () {
+        await Accounts_API.Delete(post.Id);
+        if (!Accounts_API.error) {
+            await showPosts();
+        }
+        else {
+            console.log(Accounts_API.currentHttpError)
+            showError("Une erreur est survenue!");
+        }
     });
     $('#cancel').on("click", async function () {
         await showPosts();
