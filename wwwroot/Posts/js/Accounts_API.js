@@ -97,9 +97,11 @@ class Accounts_API {
     static async Save(data, create = true)
     {
         Accounts_API.initHttpState();
+        data.Id = this.getUserId();
+        let token = this.getToken();
         return new Promise(resolve => {
             $.ajax({
-                url:create ? this.API_URL() + "/accounts/register":this.API_URL() + "/accounts/register/" + data.Id,
+                url:create ? this.API_URL() + "/accounts/register":this.API_URL() + "/accounts/modify/",
                 type: create ? "POST" : "PUT",
                 contentType: 'application/json',
                 data: JSON.stringify(data),

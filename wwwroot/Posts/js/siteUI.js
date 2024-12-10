@@ -35,6 +35,7 @@ async function Init_UI() {
     });
     $('#modifierProfileCmd').on("click", function () {
         console.log("modifierProfile");
+        showUserEditForm();
     });
     $('#gererUserCmd').on("click", function () {
         showGererUser();
@@ -174,6 +175,15 @@ function showSignUpForm() {
     $('#commit').hide();
     $("#viewTitle").text("Inscription");
     renderSignUpForm();
+}
+
+function showUserEditForm() {
+    showForm();
+    $("#hiddenIcon").show();
+    $("#hiddenIcon2").show();
+    $('#commit').hide();
+    $("#viewTitle").text("Modifier");
+    renderSignUpForm(Accounts_API.retrieveUser());
 }
 
 function showCreatePostForm() {
@@ -391,6 +401,7 @@ function updateDropDownMenu() {
     });
     $('#modifierProfileCmd').on("click", function () {
         console.log("modifierProfile");
+        showUserEditForm();
     });
     $('#logoutCmd').on("click", function () {
         Accounts_API.Logout();
