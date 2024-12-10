@@ -43,9 +43,56 @@ class Accounts_API {
         }
     }
 
+    static isAdmin()
+    {
+        return this.retrieveUser().isAdmin;
+    }
+    static getAvatar()
+    {
+      return this.retrieveUser().Avatar;  
+    }
+    static getUserName()
+    {
+        return this.retrieveUser().Name;
+    }
     static isLogged() {
         return sessionStorage.getItem("User") && sessionStorage.getItem("Token");
     }
+    static retrieveUser()
+    {
+        return JSON.parse(sessionStorage.getItem("User"));
+    }
+    static getUserId()
+    {
+        return this.retrieveUser().Id;
+    }
+    static async Logout() {
+        Accounts_API.initHttpState();
+    
+        let userId = this.getUserId();
+    
+        if (!userId) {
+            console.error("User ID is required for logout.");
+            return null; 
+        }
+    
+        return new Promise(resolve => {
+            $.ajax({
+                url: this.API_URL() + `/accounts/logout?userId=${userId}`, 
+                complete: data => {
+                    resolve({
+                        ETag: data.getResponseHeader('ETag'),
+                        data: data.responseJSON
+                    });
+                },
+                error: xhr => {
+                    Accounts_API.setHttpErrorState(xhr);
+                    resolve(null);
+                }
+            });
+        });
+    }
+    
 
     static async Save(data, create = true)
     {
