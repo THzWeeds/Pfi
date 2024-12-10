@@ -916,6 +916,7 @@ function renderSignUpForm(user = null) {
         {
             let account = await Accounts_API.Save(user,create);
             if (!Accounts_API.error) {
+                sessionStorage.setItem("User", JSON.stringify(account));
                 await showPosts();
             }
             else
