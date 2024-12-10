@@ -43,6 +43,18 @@ class Accounts_API {
         }
     }
 
+    static isAdmin()
+    {
+        return this.retrieveUser().isAdmin;
+    }
+    static getAvatar()
+    {
+      return this.retrieveUser().Avatar;  
+    }
+    static getUserName()
+    {
+        return this.retrieveUser().Name;
+    }
     static isLogged() {
         return sessionStorage.getItem("User") && sessionStorage.getItem("Token");
     }

@@ -4,7 +4,7 @@
 
 
 
-const periodicRefreshPeriod = 10;
+const periodicRefreshPeriod = 2;
 const waitingGifTrigger = 2000;
 const minKeywordLenth = 3;
 const keywordsOnchangeDelay = 500;
@@ -13,6 +13,7 @@ let categories = [];
 let selectedCategory = "";
 let currentETag = "";
 let periodic_Refresh_paused = false;
+let currentPostsCount = 0;
 let postsPanel;
 let itemLayout;
 let waiting = null;
@@ -30,6 +31,9 @@ async function Init_UI() {
     });
     $('#aboutCmd').on("click", function () {
         showAbout();
+    });
+    $('#modifierProfileCmd').on("click", function () {
+        console.log("modifierProfile");
     });
     $('#logoutCmd').on("click", function () {
         Accounts_API.Logout();
@@ -192,6 +196,31 @@ function start_Periodic_Refresh() {
         }
     },
         periodicRefreshPeriod * 1000);
+}function start_Periodic_Refresh() {
+    $("#reloadPosts").addClass('white');
+    $("#reloadPosts").on('click', async function () {
+        $("#reloadPosts").addClass('white');
+        postsPanel.resetScrollPosition();
+        await showPosts();
+    })
+    setInterval(async () => {
+        if (!periodic_Refresh_paused) {
+            let etag = await Posts_API.HEAD();
+            // the etag contain the number of model records in the following form
+            // xxx-etag
+            let postsCount = parseInt(etag.split("-")[0]);
+            if (currentETag != etag) {           
+                if (postsCount != currentPostsCount) {
+                    console.log("postsCount", postsCount)
+                    currentPostsCount = postsCount;
+                    $("#reloadPosts").removeClass('white');
+                } else
+                    await showPosts();
+                currentETag = etag;
+            }
+        }
+    },
+        periodicRefreshPeriod * 1000);
 }
 async function renderPosts(queryString) {
     let endOfData = false;
@@ -204,13 +233,13 @@ async function renderPosts(queryString) {
             queryString += "&keywords=" + $("#searchKeys").val().replace(/[ ]/g, ',')
     }
     addWaitingGif();
-    let response = await Posts_API.Get(queryString);
+    let response = await Posts_API.GetQuery(queryString);
     if (!Posts_API.error) {
         currentETag = response.ETag;
         let Posts = response.data;
         if (Posts.length > 0) {
             Posts.forEach(Post => {
-                postsPanel.itemsPanel.append(renderPost(Post));
+                postsPanel.append(renderPost(Post));
             });
         } else
             endOfData = true;
@@ -274,9 +303,21 @@ function updateDropDownMenu() {
     
     let isLoggedIn = Accounts_API.isLogged();
     if (isLoggedIn) {
+
+        DDMenu.append($(`
+            <div class="dropdown-item" id="modifierProfileCmd">
+                            <img src="${Accounts_API.getAvatar()}" alt="Avatar" class="UserAvatarXSmall"> ${Accounts_API.getUserName()}
+                        </div>
+            `));
+        DDMenu.append($(`<div class="dropdown-divider"></div>`));
+        DDMenu.append($(`
+            <div class="dropdown-item" id="modifierProfileCmd">
+                            <i class="menuIcon fa fa-user-pen mx-2"></i> Modifier votre profil
+                        </div>
+            `));
         DDMenu.append($(`
             <div class="dropdown-item" id="logoutCmd">
-                            <i class="menuIcon fa fa-sign-in mx-2"></i> Logout
+                            <i class="menuIcon fa fa-sign-out mx-2"></i> Logout
                         </div>
             `));
     } else {
@@ -314,6 +355,9 @@ function updateDropDownMenu() {
     });
     $('#loginCmd').on("click", function () {
         showConnectForm();
+    });
+    $('#modifierProfileCmd').on("click", function () {
+        console.log("modifierProfile");
     });
     $('#logoutCmd').on("click", function () {
         Accounts_API.Logout();
