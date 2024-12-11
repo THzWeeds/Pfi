@@ -829,7 +829,7 @@ function renderConnectForm(user = null) {
 
                 console.log(result);
 
-                window.location.href = 'index.html';
+                await showPosts();
             } else {
                 console.log("An unexpected error occurred.");
             }
