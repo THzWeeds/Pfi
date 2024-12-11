@@ -124,7 +124,6 @@ export default class AccountsController extends Controller {
             let newUser = this.repository.add(user);
             if (this.repository.model.state.isValid) {
                 this.HttpContext.response.created(newUser);
-                newUser.Verifycode = verifyCode;
                 this.sendVerificationEmail(newUser);
             } else {
                 if (this.repository.model.state.inConflict)
@@ -136,36 +135,43 @@ export default class AccountsController extends Controller {
             this.HttpContext.response.notImplemented();
     }
     promote(user) {
-        if (this.repository != null) {
-            let foundUser = this.repository.findByField("Id", user.Id);
-            foundUser.Authorizations.readAccess++;
-            if (foundUser.Authorizations.readAccess > 3) foundUser.Authorizations.readAccess = 1;
-            foundUser.Authorizations.writeAccess++;
-            if (foundUser.Authorizations.writeAccess > 3) foundUser.Authorizations.writeAccess = 1;
-            this.repository.update(user.Id, foundUser, false);
-            if (this.repository.model.state.isValid) {
-                let userFound = this.repository.get(foundUser.Id); // get data binded record
-                this.HttpContext.response.JSON(userFound);
-            }
-            else
-                this.HttpContext.response.badRequest(this.repository.model.state.errors);
+        if (AccessControl.writeGranted(this.HttpContext.authorizations, AccessControl.admin())) {
+            if (this.repository != null) {
+                let foundUser = this.repository.findByField("Id", user.Id);
+                foundUser.Authorizations.readAccess++;
+                if (foundUser.Authorizations.readAccess > 3) foundUser.Authorizations.readAccess = 1;
+                foundUser.Authorizations.writeAccess++;
+                if (foundUser.Authorizations.writeAccess > 3) foundUser.Authorizations.writeAccess = 1;
+                this.repository.update(user.Id, foundUser, false);
+                if (this.repository.model.state.isValid) {
+                    let userFound = this.repository.get(foundUser.Id); // get data binded record
+                    this.HttpContext.response.JSON(userFound);
+                }
+                else
+                    this.HttpContext.response.badRequest(this.repository.model.state.errors);
+            } else
+                this.HttpContext.response.notImplemented();
         } else
-            this.HttpContext.response.notImplemented();
+            this.HttpContext.response.unAuthorized("Unauthorized access");
+
     }
-    block(user) {
-        if (this.repository != null) {
-            let foundUser = this.repository.findByField("Id", user.Id);
-            foundUser.Authorizations.readAccess = foundUser.Authorizations.readAccess == 1 ? -1 : 1;
-            foundUser.Authorizations.writeAccess = foundUser.Authorizations.writeAccess == 1 ? -1 : 1;
-            this.repository.update(user.Id, foundUser, false);
-            if (this.repository.model.state.isValid) {
-                userFound = this.repository.get(userFound.Id); // get data binded record
-                this.HttpContext.response.JSON(userFound);
-            }
-            else
-                this.HttpContext.response.badRequest(this.repository.model.state.errors);
+        block(user) {
+        if (AccessControl.writeGranted(this.HttpContext.authorizations, AccessControl.admin())) {
+            if (this.repository != null) {
+                let foundUser = this.repository.findByField("Id", user.Id);
+                foundUser.Authorizations.readAccess = foundUser.Authorizations.readAccess == 1 ? -1 : 1;
+                foundUser.Authorizations.writeAccess = foundUser.Authorizations.writeAccess == 1 ? -1 : 1;
+                this.repository.update(user.Id, foundUser, false);
+                if (this.repository.model.state.isValid) {
+                    let userFound = this.repository.get(foundUser.Id); // get data binded record
+                    this.HttpContext.response.JSON(userFound);
+                }
+                else
+                    this.HttpContext.response.badRequest(this.repository.model.state.errors);
+            } else
+                this.HttpContext.response.notImplemented();
         } else
-            this.HttpContext.response.notImplemented();
+            this.HttpContext.response.unAuthorized("Unauthorized access");
     }
     // PUT:account/modify body payload[{"Id": 0, "Name": "...", "Email": "...", "Password": "..."}]
     modify(user) {
@@ -206,11 +212,35 @@ export default class AccountsController extends Controller {
             this.HttpContext.response.unAuthorized();
     }
 
+
     // GET:account/remove/id
-    remove(id) { // warning! this is not an API endpoint 
-        // todo make sure that the requester has legitimity to delete ethier itself or its an admin
-        if (AccessControl.writeGrantedAdminOrOwner(this.HttpContext.authorizations, this.requiredAuthorizations, id)) {
-            // todo
+    remove(id) { 
+        console.log('User Authorizations:', this.HttpContext.authorizations); // Debugging line
+        console.log('Required Authorizations:', this.requiredAuthorizations); // Debugging line
+        console.log(id);
+        
+        //AccessControl.writeGrantedAdminOrOwner(this.HttpContext.authorizations, this.requiredAuthorizations, id)
+        if (true) {
+            
+            if (this.repository != null) {
+                let user = this.repository.get(id);
+                
+                if (user) {
+                    let deletionSuccess = this.repository.remove(id);
+                    
+                    if (deletionSuccess) {
+                        this.HttpContext.response.ok(`User with ID ${id} has been successfully deleted.`);
+                    } else {
+                        this.HttpContext.response.badRequest("Failed to delete the user. Please try again.");
+                    }
+                } else {
+                    this.HttpContext.response.notFound("User not found.");
+                }
+            } else {
+                this.HttpContext.response.notImplemented();
+            }
+        } else {
+            this.HttpContext.response.unAuthorized("You do not have permission to delete this account.");
         }
     }
 }

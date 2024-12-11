@@ -1,6 +1,5 @@
 [
     {
-        "Id": "14cc9390-9057-11ee-9387-59e9bc2909e7",
         "Email": "Nicolas.Chourot@clg.qc.ca",
         "Password": "password",
         "Name": "Nicolas Chourot",
@@ -10,7 +9,8 @@
             "readAccess": 3,
             "writeAccess": 3
         },
-        "VerifyCode": "verified"
+        "VerifyCode": "verified",
+        "Id": "14cc9390-9057-11ee-9387-59e9bc2909e7"
     },
     {
         "Email": "nicolaschourot@gmail.ca",
@@ -81,7 +81,6 @@
         "Id": "f11ee960-aa82-11ef-b942-e7f097a2ee7a"
     },
     {
-        "Id": "e5344fa0-b324-11ef-8c00-53d6716a3a61",
         "Name": "lalala",
         "Email": "lalala@gmail.com",
         "Password": "12345",
@@ -89,8 +88,9 @@
         "Created": 1733415652,
         "VerifyCode": 349484,
         "Authorizations": {
-            "readAccess": 1,
-            "writeAccess": 1
-        }
+            "readAccess": -1,
+            "writeAccess": -1
+        },
+        "Id": "e5344fa0-b324-11ef-8c00-53d6716a3a61"
     }
 ]
