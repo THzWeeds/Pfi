@@ -24,11 +24,21 @@ let keywordsOnchangeTimger = null;
 Init_UI();
 async function Init_UI() {
     postsPanel = new PageManager('postsScrollPanel', 'postsPanel', 'postSample', renderPosts);
+    let isLoggedIn = Accounts_API.isLogged();
+
     $('#createPost').on("click", async function () {
         showCreatePostForm();
+        if (isLoggedIn) 
+            {
+                timeout(30);
+            }
     });
     $('#abort').on("click", async function () {
         showPosts();
+        if (isLoggedIn) 
+            {
+                timeout(30);
+            }
     });
     $('#aboutCmd').on("click", function () {
         showAbout();
@@ -36,22 +46,59 @@ async function Init_UI() {
     $('#modifierProfileCmd').on("click", function () {
         console.log("modifierProfile");
         showUserEditForm();
+        if (isLoggedIn) 
+            {
+                timeout(30);
+            }
     });
     $('#gererUserCmd').on("click", function () {
         showGererUser();
+        if (isLoggedIn) 
+            {
+                timeout(30);
+            }
     });
     $('#signupCmd').on("click", function () {
         showSignUpForm();
+        if (isLoggedIn) 
+            {
+                timeout(30);
+            }
     });
     $("#showSearch").on('click', function () {
         toogleShowKeywords();
         showPosts();
+        if (isLoggedIn) 
+        {
+            timeout(30);
+        }
     });
 
     installKeywordsOnkeyupEvent();
     await showPosts();
     start_Periodic_Refresh();
+
+    initTimeout(60, function () {
+        Accounts_API.Logout();
+        if (!Accounts_API.error) {
+            sessionStorage.clear();
+            sessionStorage.setItem("sessionExpired", "true"); 
+            showConnectForm();
+            noTimeout();
+        }
+    });
+    
+    if (isLoggedIn) 
+        {
+            timeout(30);
+        }
+    
 }
+
+
+
+
+
 
 /////////////////////////// Search keywords UI //////////////////////////////////////////////////////////
 
@@ -226,7 +273,7 @@ function start_Periodic_Refresh() {
         }
     },
         periodicRefreshPeriod * 1000);
-}function start_Periodic_Refresh() {
+} function start_Periodic_Refresh() {
     $("#reloadPosts").addClass('white');
     $("#reloadPosts").on('click', async function () {
         $("#reloadPosts").addClass('white');
@@ -239,7 +286,7 @@ function start_Periodic_Refresh() {
             // the etag contain the number of model records in the following form
             // xxx-etag
             let postsCount = parseInt(etag.split("-")[0]);
-            if (currentETag != etag) {           
+            if (currentETag != etag) {
                 if (postsCount != currentPostsCount) {
                     console.log("postsCount", postsCount)
                     currentPostsCount = postsCount;
@@ -330,10 +377,10 @@ function updateDropDownMenu() {
     let selectClass = selectedCategory === "" ? "fa-check" : "fa-fw";
     DDMenu.empty();
 
-    
+
     let isLoggedIn = Accounts_API.isLogged();
     if (isLoggedIn) {
-        
+
 
         DDMenu.append($(`
             <div class="dropdown-item" id="modifierProfileCmd">
@@ -342,9 +389,8 @@ function updateDropDownMenu() {
             `));
         DDMenu.append($(`<div class="dropdown-divider"></div>`));
 
-        let isAdmin =  Accounts_API.isAdmin();
-        if(isAdmin)
-        {
+        let isAdmin = Accounts_API.isAdmin();
+        if (isAdmin) {
             DDMenu.append($(`
                 <div class="dropdown-item" id="gererUserCmd">
                                 <i class="menuIcon fa fa-user-pen mx-2"></i> Gestions des usagers
@@ -370,7 +416,7 @@ function updateDropDownMenu() {
                         </div>
             `));
     }
-    
+
 
     DDMenu.append($(`<div class="dropdown-divider"></div>`));
     DDMenu.append($(`
@@ -405,8 +451,7 @@ function updateDropDownMenu() {
     });
     $('#logoutCmd').on("click", function () {
         Accounts_API.Logout();
-        if(!Accounts_API.error)
-        {
+        if (!Accounts_API.error) {
             sessionStorage.clear();
             showPosts();
         }
@@ -689,7 +734,7 @@ function newSignUp() {
     return signUp;
 }
 async function renderGererUser(user = null) {
-    const users = await Accounts_API.GetAllUsers(); 
+    const users = await Accounts_API.GetAllUsers();
     console.log(users);
 
     $("#form").show();
@@ -698,7 +743,7 @@ async function renderGererUser(user = null) {
     users.forEach(user => {
         const isBlocked = user.Authorizations.readAccess === -1 && user.Authorizations.writeAccess === -1;
         const isPromoted = user.IsPromoted;
-        
+
         // Determine the user role based on permissions
         let roleText = 'Usager de base'; // Default role
         if (user.Authorizations.readAccess >= 3 && user.Authorizations.writeAccess >= 3) {
@@ -735,7 +780,7 @@ async function renderGererUser(user = null) {
         let result = await Accounts_API.BlockUser({ Id: userId });
 
         // Re-render the user list to reflect the block action
-        renderGererUser(); 
+        renderGererUser();
     });
 
     // Promote Button Click Handler
@@ -746,7 +791,7 @@ async function renderGererUser(user = null) {
         let result = await Accounts_API.PromoteUser({ Id: userId });
 
         // Re-render the user list to reflect the promotion action
-        renderGererUser(); 
+        renderGererUser();
     });
 
     // Delete Button Click Handler
@@ -757,7 +802,7 @@ async function renderGererUser(user = null) {
         await Accounts_API.Delete(userId);
 
         // Re-render the user list after deletion
-        renderGererUser(); 
+        renderGererUser();
     });
 
     // Cancel Button Click Handler
@@ -766,14 +811,21 @@ async function renderGererUser(user = null) {
     });
 }
 
-
-
 function renderConnectForm(user = null) {
     let create = user == null;
     if (create) user = newConnect();
+    
+
+    let sessionExpiredMessage = sessionStorage.getItem("sessionExpired") ? 
+                                '<div class="text-danger" id="sessionExpiredMessage">Session expirer. Veuillez vous reconnecter.</div>' : 
+                                '';
+
+    sessionStorage.removeItem("sessionExpired");
+    
     $("#form").show();
     $("#form").empty();
     $("#form").append(`
+        ${sessionExpiredMessage}
         <form class="form centered" id="connectForm">
             <label for="Email" class="form-label">Connexion </label>
             <input 
@@ -797,9 +849,8 @@ function renderConnectForm(user = null) {
             <input type="submit" value="Se connecter" id="saveConnect" class="btn btn-primary full-width ">
         </form>
         <div id="signupCmd">
-            <span class="btn btn-primary full-width ">  Inscription </span>
+            <span class="btn btn-primary full-width "> Inscription </span>
         </div>
-
     `);
 
     $('#connectForm').on("submit", async function (event) {
@@ -816,18 +867,17 @@ function renderConnectForm(user = null) {
                 $('#error-message-email').text("Courriel introuvable");
                 $('#error-message-password').text("");
             } else if (result.status === 482) {
-                $('#error-message-password').text("Mot de passe inccorect");
+                $('#error-message-password').text("Mot de passe incorrect");
                 $('#error-message-email').text("");
             } else {
                 console.log("Unexpected error:", result.error);
             }
         } else {
             if (result.data && result.data.Access_token) {
-
                 sessionStorage.setItem("Token", result.data.Access_token);
                 sessionStorage.setItem("User", JSON.stringify(result.data.User));
 
-                console.log(result);
+                timeout(30);
 
                 await showPosts();
             } else {
@@ -835,13 +885,16 @@ function renderConnectForm(user = null) {
             }
         }
     });
+
     $('#cancel').on("click", async function () {
         await showPosts();
     });
+
     $('#signupCmd').on("click", function () {
         showSignUpForm();
     });
 }
+
 
 function renderSignUpForm(user = null) {
     console.log("Signup Form");
@@ -922,9 +975,8 @@ function renderSignUpForm(user = null) {
         
 
     `);
-    
-    if(!create)
-    {
+
+    if (!create) {
         $("#form").append(` 
             <input type="button" value="Effacer ce compte" id="deleteUser" class="btn btn-primary full-width">
             `);
@@ -935,7 +987,7 @@ function renderSignUpForm(user = null) {
     if (create) $("#keepDateControl").hide();
 
     initImageUploaders();
-    addConflictValidation(Accounts_API.API_URL() + "/accounts/conflict","Email","saveUser");
+    addConflictValidation(Accounts_API.API_URL() + "/accounts/conflict", "Email", "saveUser");
     initFormValidation();
     $('#cancel').on("click", async function (event) {
         await showPosts();
@@ -944,25 +996,21 @@ function renderSignUpForm(user = null) {
     $('#signUpForm').on("submit", async function (event) {
         event.preventDefault();
         let userform = getFormData($("#signUpForm"));
-        let error =false;
-        if (userform.Email != userform.VerifyEmail)
-        {
+        let error = false;
+        if (userform.Email != userform.VerifyEmail) {
             error = true;
             $('#error-message-email').text("Les courriels entré ne sont pas identiques");
             //showError("Une erreur est survenue! ", "Les courriels entré ne sont pas identiques");
         }
-        else
-        {
+        else {
             $('#error-message-email').empty();
         }
-        if (userform.Password != userform.VerifyPassword)
-        {
+        if (userform.Password != userform.VerifyPassword) {
             error = true;
             $('#error-message-password').text("Les mots de passes ne sont pas identiques");
             //showError("Une erreur est survenue! ", "Les mots de passes ne sont pas identiques");
         }
-        else
-        {
+        else {
             $('#error-message-password').empty();
         }
         let user = {};
@@ -972,9 +1020,8 @@ function renderSignUpForm(user = null) {
         user.Avatar = userform.Avatar;
         console.log(user);
 
-        if (!error)
-        {
-            let account = await Accounts_API.Save(user,create);
+        if (!error) {
+            let account = await Accounts_API.Save(user, create);
             if (!Accounts_API.error) {
                 sessionStorage.setItem("User", JSON.stringify(account));
                 await showPosts();
@@ -982,7 +1029,7 @@ function renderSignUpForm(user = null) {
             else
                 showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
         }
-        
+
         return;
     });
     $('#cancel').on("click", async function () {
@@ -999,11 +1046,9 @@ function showDeletePostForm(id) {
     renderDeleteUserForm(id);
 }
 
-async function renderDeleteUserForm(id)
-{
+async function renderDeleteUserForm(id) {
     let response = await Posts_API.Get(id);
-    if (!Posts_API.error)
-    {
+    if (!Posts_API.error) {
         $("#form").append(`
             <div>Voulez-vous effacer cet utilisateur</div>
 
