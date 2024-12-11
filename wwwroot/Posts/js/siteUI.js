@@ -696,17 +696,77 @@ async function renderGererUser(user = null) {
     $("#form").empty();
 
     users.forEach(user => {
+        const isBlocked = user.Authorizations.readAccess === -1 && user.Authorizations.writeAccess === -1;
+        const isPromoted = user.IsPromoted;
+        
+        // Determine the user role based on permissions
+        let roleText = 'Usager de base'; // Default role
+        if (user.Authorizations.readAccess >= 3 && user.Authorizations.writeAccess >= 3) {
+            roleText = 'Administrateur';
+        } else if (user.Authorizations.readAccess === 2) {
+            roleText = 'Super usager';
+        }
+
+        // Append each user with a block, promote, and delete button
         $("#form").append(`
             <div>
-                <span>${user.Name}</span>
+                <div>
+                    <span>${user.Name}</span>
+                    <span class="user-role">(${roleText})</span>
+                </div>
+                <div>
+                    <button class="block-user" data-user-id="${user.Id}" ${isBlocked ? 'disabled' : ''}>
+                        ${isBlocked ? 'Blocked' : 'Block'}
+                    </button>
+                    <button class="promote-user" data-user-id="${user.Id}" ${isPromoted ? 'disabled' : ''}>
+                        ${isPromoted ? 'Promoted' : 'Promote'}
+                    </button>
+                    <button class="delete-user" data-user-id="${user.Id}">Delete</button>
+                </div>
             </div>
         `);
     });
 
+    // Block Button Click Handler
+    $(".block-user").on("click", async function () {
+        const userId = $(this).data("user-id");
+
+        // Block the user via the API
+        let result = await Accounts_API.BlockUser({ Id: userId });
+
+        // Re-render the user list to reflect the block action
+        renderGererUser(); 
+    });
+
+    // Promote Button Click Handler
+    $(".promote-user").on("click", async function () {
+        const userId = $(this).data("user-id");
+
+        // Promote the user via the API
+        let result = await Accounts_API.PromoteUser({ Id: userId });
+
+        // Re-render the user list to reflect the promotion action
+        renderGererUser(); 
+    });
+
+    // Delete Button Click Handler
+    $(".delete-user").on("click", async function () {
+        const userId = $(this).data("user-id");
+
+        // Call the delete API
+        await Accounts_API.Delete(userId);
+
+        // Re-render the user list after deletion
+        renderGererUser(); 
+    });
+
+    // Cancel Button Click Handler
     $('#cancel').on("click", async function () {
         await showPosts();
     });
 }
+
+
 
 function renderConnectForm(user = null) {
     let create = user == null;

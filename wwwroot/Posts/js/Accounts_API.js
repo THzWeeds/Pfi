@@ -70,6 +70,7 @@ class Accounts_API {
     {
         return sessionStorage.getItem("Token");
     }
+    
     static async Logout() {
         Accounts_API.initHttpState();
     
@@ -129,6 +130,85 @@ class Accounts_API {
 
         });
     }
+
+    static async BlockUser(data)
+    {
+        console.log(data);
+        Accounts_API.initHttpState();
+        let token = this.getToken();
+        return new Promise(resolve => {
+            $.ajax({
+                url:this.API_URL() + "/accounts/block",
+                type: "POST",
+                contentType: 'application/json',
+                headers: {"authorization" : token},
+                data: JSON.stringify(data),
+                success: (data) => { resolve(data); },
+                error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
+            });
+
+
+        });
+    }
+    static async BlockUser(data)
+    {
+        console.log(data);
+        Accounts_API.initHttpState();
+        let token = this.getToken();
+        return new Promise(resolve => {
+            $.ajax({
+                url:this.API_URL() + "/accounts/block",
+                type: "POST",
+                contentType: 'application/json',
+                headers: {"authorization" : token},
+                data: JSON.stringify(data),
+                success: (data) => { resolve(data); },
+                error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
+            });
+
+
+        });
+    }static async PromoteUser(data)
+    {
+        console.log(data);
+        Accounts_API.initHttpState();
+        let token = this.getToken();
+        return new Promise(resolve => {
+            $.ajax({
+                url:this.API_URL() + "/accounts/promote",
+                type: "POST",
+                contentType: 'application/json',
+                headers: {"authorization" : token},
+                data: JSON.stringify(data),
+                success: (data) => { resolve(data); },
+                error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
+            });
+
+
+        });
+    }
+    static async Delete(id) {
+        let token = this.getToken();
+        return new Promise(resolve => {
+
+            $.ajax({
+                url: this.API_URL() + "/accounts/remove/" + id, 
+                type: "GET", 
+                headers: {"authorization": token}, 
+                success: () => {
+                    Accounts_API.initHttpState(); 
+                    resolve(true); 
+                },
+                error: (xhr) => {
+                    Accounts_API.setHttpErrorState(xhr); 
+                    resolve(null); 
+                }
+            });
+        });
+    }
+    
+    
+    
 
 }
 
