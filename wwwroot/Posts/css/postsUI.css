@@ -164,3 +164,100 @@
     overflow-y: auto;
     scrollbar-gutter: stable;
 }
+/* Basic styles for the form */
+#form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style each user card */
+#form > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Name style */
+#form > div span {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    flex-grow: 1;
+}
+
+/* User role text styling */
+.user-role {
+    font-size: 14px;
+    color: #777;
+    margin-left: 10px;
+}
+
+/* Button styles */
+button {
+    padding: 8px 15px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* Block button styles */
+.block-user {
+    background-color: #f44336;
+    color: white;
+}
+
+.block-user:disabled {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+}
+
+/* Promote button styles */
+.promote-user {
+    background-color: #4caf50;
+    color: white;
+}
+
+.promote-user:disabled {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+}
+
+/* Delete button styles */
+.delete-user {
+    background-color: #2196f3;
+    color: white;
+}
+
+.delete-user:hover {
+    background-color: #1976d2;
+}
+
+/* Cancel button */
+#cancel {
+    padding: 8px 15px;
+    background-color: #9e9e9e;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+/* Hover effects for cancel */
+#cancel:hover {
+    background-color: #757575;
+}

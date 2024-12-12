@@ -105,5 +105,18 @@
             "readAccess": 1,
             "writeAccess": 1
         }
+    },
+    {
+        "Name": "vincent",
+        "Email": "vincentlajoie01@yopmail.com",
+        "Password": "password",
+        "Avatar": "c25b2b70-b81a-11ef-a465-0783c7926cdb.png",
+        "Created": 1733979054,
+        "VerifyCode": "verified",
+        "Authorizations": {
+            "readAccess": 1,
+            "writeAccess": 1
+        },
+        "Id": "c25b0460-b81a-11ef-a465-0783c7926cdb"
     }
 ]
