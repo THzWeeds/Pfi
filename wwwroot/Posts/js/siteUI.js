@@ -285,18 +285,26 @@ async function renderPosts(queryString) {
 function renderPost(post, loggedUser) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
     let likeCMD = "";
+    let usersLiked = "";
     if (Accounts_API.isLogged())
     {
-        
-        let liked = Posts_API.CheckLiked(post.Id);
-        console.log(liked);
-        likeCMD = liked ? `<span class="unlikeCmd cmdIconSmall fa-solid fa-thumbs-up" postId="${post.Id}" title="Retirer"></span>` : `<span class="likeCmd cmdIconSmall fa-regular fa-thumbs-up" postId="${post.Id}" title="Ajouter"></span>`;
+        console.log(post.LikedUsers.includes(Accounts_API.getUserId()));
+        let splitLiked = post.LikedUsers.split("\n");
+        splitLiked.forEach((user) => {
+            if (user != "")
+            {
+                usersLiked += Accounts_API.GetAllUsers(user).Name + "\n";
+            }
+            
+        });
+        likeCMD = post.LikedUsers.includes(Accounts_API.getUserId()) ? `<span class="unlikeCmd cmdIconSmall fa-solid fa-thumbs-up" postId="${post.Id}" title="Retirer"></span>` : `<span class="likeCmd cmdIconSmall fa-regular fa-thumbs-up" postId="${post.Id}" title="Ajouter"></span>`;
     }
     let crudIcon =
         `
         <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
         <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
         ${likeCMD}
+        <span title="${usersLiked}">${post.Likes}</span>
         `;
 
     return $(`
