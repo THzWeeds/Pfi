@@ -64,22 +64,6 @@ class Accounts_API {
     static getToken() {
         return sessionStorage.getItem("Token");
     }
-
-    static isBaseUser() {
-        let user = JSON.parse(sessionStorage.getItem("User")); 
-        return !user.isSuper && !user.isAdmin; 
-    }
-
-    static isSuperUser() {
-        let user = JSON.parse(sessionStorage.getItem("User"));
-        return user.isSuper; 
-    }
-
-    static isAdmin() {
-        let user = JSON.parse(sessionStorage.getItem("User"));
-        return user.isAdmin; 
-    }
-
     static async Logout() {
         Accounts_API.initHttpState();
 

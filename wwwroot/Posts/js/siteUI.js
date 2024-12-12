@@ -21,21 +21,19 @@ let waiting = null;
 let showKeywords = false;
 let keywordsOnchangeTimger = null;
 
-let isUserAnonyme = false;
-let isBaseUser = false;
-let isSuperUser = false;
-let isAdmin = false;
 
 Init_UI();
 async function Init_UI() {
     postsPanel = new PageManager('postsScrollPanel', 'postsPanel', 'postSample', renderPosts);
     let isLoggedIn = Accounts_API.isLogged();
 
+
     $('#createPost').on("click", async function () {
-        showCreatePostForm();
-        if (isLoggedIn) {
+            showCreatePostForm();
+            if (isLoggedIn) {
             timeout(30);
         }
+
     });
     $('#abort').on("click", async function () {
         showPosts();
@@ -161,6 +159,22 @@ function intialView() {
     $('#connectContainer').hide();
     $('#errorContainer').hide();
     showSearchIcon();
+
+    if(Accounts_API.isLogged())
+    {
+        if(Accounts_API.retrieveUser().isAdmin || Accounts_API.retrieveUser().isSuper)
+        {
+            $('#createPost').show();
+        }
+        else
+        {
+            $('#createPost').hide();        
+        }
+    }
+    else{
+        $('#createPost').hide();
+    }
+    
 }
 async function showPosts(reset = false) {
     intialView();
@@ -239,9 +253,14 @@ function showUserEditForm() {
 }
 
 function showCreatePostForm() {
-    showForm();
-    $("#viewTitle").text("Ajout de nouvelle");
-    renderPostForm();
+    if(Accounts_API.isLogged())
+    {
+        if (Accounts_API.retrieveUser().isAdmin || Accounts_API.retrieveUser().isSuper) {
+            showForm();
+            $("#viewTitle").text("Ajout de nouvelle");
+            renderPostForm();
+        }
+    }
 }
 function showEditPostForm(id) {
     showForm();
@@ -928,12 +947,25 @@ function renderConnectForm(user = null) {
                 sessionStorage.setItem("Token", result.data.Access_token);
                 sessionStorage.setItem("User", JSON.stringify(result.data.User));
 
+                if(Accounts_API.isLogged() && result.data.User.isBlocked == true)
+                {
+                    console.log("entrer");
+                    Accounts_API.Logout();
+                    sessionStorage.clear();
+                    noTimeout();
+                    showPosts();
+                    alert("Compte Bloquer");
+                }
 
-                if (Accounts_API.isLogged() && result.data.User.VerifyCode != "verified") {
+
+                if (Accounts_API.isLogged() && result.data.User.VerifyCode != "verified" ) {
                     showVerificationForm();
                 }
                 else {
-                    timeout(30);
+                    if(Accounts_API.isLogged() && !result.data.User.isBlocked == true)
+                    {
+                        timeout(30);
+                    }
                     await showPosts();
                 }
             } else {
