@@ -316,12 +316,17 @@ async function renderPosts(queryString) {
     }
     addWaitingGif();
     let response = await Posts_API.GetQuery(queryString);
+    let users = "";
     if (!Posts_API.error) {
+        if (Accounts_API.isLogged())
+        {
+            users = await Accounts_API.GetAllUsers();
+        }
         currentETag = response.ETag;
         let Posts = response.data;
         if (Posts.length > 0) {
             Posts.forEach(Post => {
-                postsPanel.append(renderPost(Post));
+                postsPanel.append(renderPost(Post,users));
             });
         } else
             endOfData = true;
@@ -334,12 +339,31 @@ async function renderPosts(queryString) {
     removeWaitingGif();
     return endOfData;
 }
-function renderPost(post, loggedUser) {
+function renderPost(post, users) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
+    let likeCMD = "";
+    let usersLiked = "";
+    if (Accounts_API.isLogged())
+    {
+        console.log(post.LikedUsers.includes(Accounts_API.getUserId()));
+        let splitLiked = post.LikedUsers.split("\n");
+        
+        
+        users.forEach((user) => {
+            if (post.LikedUsers.includes(user.Id))
+            {
+                console.log("in");
+                usersLiked += user.Name + "\n";
+            }
+        });
+        
+        likeCMD = post.LikedUsers.includes(Accounts_API.getUserId()) ? `<span class="unlikeCmd cmdIconSmall fa-solid fa-thumbs-up" postId="${post.Id}" title="Retirer"></span> <span title="${usersLiked}">${post.Likes}</span>` : `<span class="likeCmd cmdIconSmall fa-regular fa-thumbs-up" postId="${post.Id}" title="Ajouter"></span> <span title="${usersLiked}">${post.Likes}</span>`;
+    }
     let crudIcon =
         `
         <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
         <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
+        ${likeCMD}
         `;
 
     return $(`
@@ -480,6 +504,15 @@ function attach_Posts_UI_Events_Callback() {
 
     linefeeds_to_Html_br(".postText");
     // attach icon command click event callback
+    $(".likeCmd").off();
+    $(".likeCmd").on("click", function () {
+        Posts_API.AddLike($(this).attr("postId"));
+    });
+    $(".unlikeCmd").off();
+    $(".unlikeCmd").on("click", function () {
+        Posts_API.RemoveLike($(this).attr("postId"));
+    });
+
     $(".editCmd").off();
     $(".editCmd").on("click", function () {
         showEditPostForm($(this).attr("postId"));
@@ -636,6 +669,7 @@ function renderPostForm(post = null) {
     $("#form").append(`
         <form class="form" id="postForm">
             <input type="hidden" name="Id" value="${post.Id}"/>
+            <input type="hidden" name="Likes" value="${post.Likes}"/>
              <input type="hidden" name="Date" value="${post.Date}"/>
             <label for="Category" class="form-label">Catégorie </label>
             <input 
@@ -699,6 +733,10 @@ function renderPostForm(post = null) {
         if (create || !('keepDate' in post))
             post.Date = Local_to_UTC(Date.now());
         delete post.keepDate;
+        if (post.Likes == null )
+        {
+            post.Likes = 0;
+        }
         post = await Posts_API.Save(post, create);
         if (!Posts_API.error) {
             await showPosts();
@@ -960,7 +998,7 @@ function renderSignUpForm(user = null) {
     $("#form").empty();
     $("#form").append(`
         <form class="form centered" id="signUpForm">
-            <label for="Email" class="form-label">Inscription </label>
+            <label for="Email" class="form-label">Courriel </label>
             <input 
                 class="form-control full-width Email"
                 name="Email" 
@@ -1053,6 +1091,7 @@ function renderSignUpForm(user = null) {
         event.preventDefault();
         let userform = getFormData($("#signUpForm"));
         let error = false;
+        
         if (userform.Email != userform.VerifyEmail) {
             error = true;
             $('#error-message-email').text("Les courriels entré ne sont pas identiques");
@@ -1069,15 +1108,27 @@ function renderSignUpForm(user = null) {
         else {
             $('#error-message-password').empty();
         }
-        let user = {};
-        user.Name = userform.Name;
-        user.Email = userform.Email;
-        user.Password = userform.Password;
-        user.Avatar = userform.Avatar;
+        let userSubmit = {};
+        userSubmit.Name = userform.Name;
+        userSubmit.Email = userform.Email;
+        userSubmit.Password = userform.Password;
+        userSubmit.Avatar = userform.Avatar;
         console.log(user);
-
+        // if (!create)
+        // {
+        //     if (userform.Password =="" || userform.Password == null)
+        //     {
+        //         userSubmit.Password = user.Password;
+                
+        //     }
+        //     if (userform.Avatar =="" || userform.Avatar == null)
+        //     {
+        //         userSubmit.Avatar = user.Avatar;
+                
+        //     }
+        // }
         if (!error) {
-            let account = await Accounts_API.Save(user, create);
+            let account = await Accounts_API.Save(userSubmit, create);
             if (!Accounts_API.error) {
                 sessionStorage.setItem("User", JSON.stringify(account));
                 await showPosts();
@@ -1092,27 +1143,30 @@ function renderSignUpForm(user = null) {
         await showPosts();
     });
     $('#deleteUser').on("click", async function () {
-        await showPosts();
+        showDeleteUserForm()
     });
 }
 
-function showDeletePostForm(id) {
+function showDeleteUserForm() {
     showForm();
-    $("#viewTitle").text("Effacer le compter");
-    renderDeleteUserForm(id);
+    $("#form").empty();
+    $("#viewTitle").text("Effacer le compte");
+    renderDeleteUserForm();
 }
 
-async function renderDeleteUserForm(id) {
-    let response = await Posts_API.Get(id);
-    if (!Posts_API.error) {
-        $("#form").append(`
-            <div>Voulez-vous effacer cet utilisateur</div>
-
-        `);
-    }
-    $('#commit').on("click", async function () {
-        await Accounts_API.Delete(post.Id);
+async function renderDeleteUserForm() {
+    
+    let user = Accounts_API.getUserId();
+    $("#form").append(`
+        <label for="deleteUser" class="form-label">Voulez-vous effacer votre compte</label>
+        <input type="submit" value="Effacer" id="deleteUser" class="btn btn-primary full-width ">
+        <input type="button" value="annuler" id="cancel" class="btn btn-primary full-width">
+    `);
+    
+    $('#deleteUser').on("click", async function () {
+        await Accounts_API.Delete(user);
         if (!Accounts_API.error) {
+            Accounts_API.Logout();
             await showPosts();
         }
         else {
