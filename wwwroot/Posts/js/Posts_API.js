@@ -102,6 +102,7 @@ class Posts_API {
         console.log(post);
         post.Likes += 1;
         post.LikedUsers +=`${Accounts_API.getUserId()} \n`; 
+        post.LikedUsersName += `${Accounts_API.getUserName()} \n`
         post.Image = post.Image.replace("http://localhost:5000/assetsRepository/","");
         console.log(post.Image);
         post = await this.SaveLike(post);
@@ -115,6 +116,7 @@ class Posts_API {
         if (post.LikedUsers.indexOf(Accounts_API.getUserId()) != null)
         {
             post.LikedUsers = post.LikedUsers.replace(Accounts_API.getUserId(),"");
+            post.LikedUsers = post.LikedUsersName.replace(Accounts_API.getUserName(),"");
         }
         post = await this.SaveLike(post);
     }
