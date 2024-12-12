@@ -284,10 +284,19 @@ async function renderPosts(queryString) {
 }
 function renderPost(post, loggedUser) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
+    let likeCMD = "";
+    if (Accounts_API.isLogged())
+    {
+        
+        let liked = Posts_API.CheckLiked(post.Id);
+        console.log(liked);
+        likeCMD = liked ? `<span class="unlikeCmd cmdIconSmall fa-solid fa-thumbs-up" postId="${post.Id}" title="Retirer"></span>` : `<span class="likeCmd cmdIconSmall fa-regular fa-thumbs-up" postId="${post.Id}" title="Ajouter"></span>`;
+    }
     let crudIcon =
         `
         <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
         <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
+        ${likeCMD}
         `;
 
     return $(`
@@ -429,6 +438,15 @@ function attach_Posts_UI_Events_Callback() {
 
     linefeeds_to_Html_br(".postText");
     // attach icon command click event callback
+    $(".likeCmd").off();
+    $(".likeCmd").on("click", function () {
+        Posts_API.AddLike($(this).attr("postId"));
+    });
+    $(".unlikeCmd").off();
+    $(".unlikeCmd").on("click", function () {
+        Posts_API.RemoveLike($(this).attr("postId"));
+    });
+
     $(".editCmd").off();
     $(".editCmd").on("click", function () {
         showEditPostForm($(this).attr("postId"));
@@ -585,6 +603,7 @@ function renderPostForm(post = null) {
     $("#form").append(`
         <form class="form" id="postForm">
             <input type="hidden" name="Id" value="${post.Id}"/>
+            <input type="hidden" name="Likes" value="${post.Likes}"/>
              <input type="hidden" name="Date" value="${post.Date}"/>
             <label for="Category" class="form-label">Catégorie </label>
             <input 
@@ -648,6 +667,10 @@ function renderPostForm(post = null) {
         if (create || !('keepDate' in post))
             post.Date = Local_to_UTC(Date.now());
         delete post.keepDate;
+        if (post.Likes == null )
+        {
+            post.Likes = 0;
+        }
         post = await Posts_API.Save(post, create);
         if (!Posts_API.error) {
             await showPosts();
@@ -929,13 +952,13 @@ function renderSignUpForm(user = null) {
         await showPosts();
     });
     $('#deleteUser').on("click", async function () {
-        await showPosts();
+        showDeleteUserForm()
     });
 }
 
-function showDeletePostForm(id) {
+function showDeleteUserForm(id) {
     showForm();
-    $("#viewTitle").text("Effacer le compter");
+    $("#viewTitle").text("Effacer le compte");
     renderDeleteUserForm(id);
 }
 

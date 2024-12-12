@@ -80,4 +80,35 @@ class Posts_API {
             });
         });
     }
+
+    static CheckLiked(id){
+        let post = this.Get(id);
+        console.log(post);
+        post = JSON.stringify(post.data);
+        console.log(post);
+        let liked = post.data.LikedUsers.includes(Accounts_API.getUserId());
+        return liked;
+        
+    }
+    static async AddLike(id) 
+    {
+        let post = await this.Get(id);
+        post = post.data;
+        console.log(post);
+        post.Likes += 1;
+        post.LikedUsers +=`\n ${Accounts_API.getUserId()}`; 
+        post = await this.Save(post, false);
+    }
+    static async RemoveLike(id)
+    {
+        let post = await this.Get(id);
+        post = post.data;
+        
+        post.Likes -= 1;
+        if (post.LikedUsers.indexOf(Accounts_API.getUserId()) != null)
+        {
+            post.LikedUsers = post.LikedUsers.replace(Accounts_API.getUserId(),"");
+        }
+        post = await this.Save(post, false);
+    }
 }

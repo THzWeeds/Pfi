@@ -113,7 +113,6 @@ class Accounts_API {
     static async Save(data, create = true)
     {
         Accounts_API.initHttpState();
-        data.Id = this.getUserId();
         let token = this.getToken();
         return new Promise(resolve => {
             $.ajax({
