@@ -348,10 +348,8 @@ function renderPost(post, users) {
         console.log(post.LikedUsers.includes(Accounts_API.getUserId()));
         let splitLiked = post.LikedUsers.split("\n");
         
-        console.log(users[0].Id);
+        
         users.forEach((user) => {
-            console.log(user.Id);
-            console.log(splitLiked[1]);
             if (post.LikedUsers.includes(user.Id))
             {
                 console.log("in");
@@ -1000,7 +998,7 @@ function renderSignUpForm(user = null) {
     $("#form").empty();
     $("#form").append(`
         <form class="form centered" id="signUpForm">
-            <label for="Email" class="form-label">Inscription </label>
+            <label for="Email" class="form-label">Courriel </label>
             <input 
                 class="form-control full-width Email"
                 name="Email" 
@@ -1093,6 +1091,7 @@ function renderSignUpForm(user = null) {
         event.preventDefault();
         let userform = getFormData($("#signUpForm"));
         let error = false;
+        
         if (userform.Email != userform.VerifyEmail) {
             error = true;
             $('#error-message-email').text("Les courriels entré ne sont pas identiques");
@@ -1109,15 +1108,27 @@ function renderSignUpForm(user = null) {
         else {
             $('#error-message-password').empty();
         }
-        let user = {};
-        user.Name = userform.Name;
-        user.Email = userform.Email;
-        user.Password = userform.Password;
-        user.Avatar = userform.Avatar;
+        let userSubmit = {};
+        userSubmit.Name = userform.Name;
+        userSubmit.Email = userform.Email;
+        userSubmit.Password = userform.Password;
+        userSubmit.Avatar = userform.Avatar;
         console.log(user);
-
+        // if (!create)
+        // {
+        //     if (userform.Password =="" || userform.Password == null)
+        //     {
+        //         userSubmit.Password = user.Password;
+                
+        //     }
+        //     if (userform.Avatar =="" || userform.Avatar == null)
+        //     {
+        //         userSubmit.Avatar = user.Avatar;
+                
+        //     }
+        // }
         if (!error) {
-            let account = await Accounts_API.Save(user, create);
+            let account = await Accounts_API.Save(userSubmit, create);
             if (!Accounts_API.error) {
                 sessionStorage.setItem("User", JSON.stringify(account));
                 await showPosts();
@@ -1136,23 +1147,26 @@ function renderSignUpForm(user = null) {
     });
 }
 
-function showDeleteUserForm(id) {
+function showDeleteUserForm() {
     showForm();
+    $("#form").empty();
     $("#viewTitle").text("Effacer le compte");
-    renderDeleteUserForm(id);
+    renderDeleteUserForm();
 }
 
-async function renderDeleteUserForm(id) {
-    let response = await Posts_API.Get(id);
-    if (!Posts_API.error) {
-        $("#form").append(`
-            <div>Voulez-vous effacer cet utilisateur</div>
-
-        `);
-    }
-    $('#commit').on("click", async function () {
-        await Accounts_API.Delete(post.Id);
+async function renderDeleteUserForm() {
+    
+    let user = Accounts_API.getUserId();
+    $("#form").append(`
+        <label for="deleteUser" class="form-label">Voulez-vous effacer votre compte</label>
+        <input type="submit" value="Effacer" id="deleteUser" class="btn btn-primary full-width ">
+        <input type="button" value="annuler" id="cancel" class="btn btn-primary full-width">
+    `);
+    
+    $('#deleteUser').on("click", async function () {
+        await Accounts_API.Delete(user);
         if (!Accounts_API.error) {
+            Accounts_API.Logout();
             await showPosts();
         }
         else {
