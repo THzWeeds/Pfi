@@ -21,6 +21,11 @@ let waiting = null;
 let showKeywords = false;
 let keywordsOnchangeTimger = null;
 
+let isUserAnonyme = false;
+let isBaseUser = false;
+let isSuperUser = false;
+let isAdmin = false;
+
 Init_UI();
 async function Init_UI() {
     postsPanel = new PageManager('postsScrollPanel', 'postsPanel', 'postSample', renderPosts);
@@ -81,7 +86,6 @@ async function Init_UI() {
             noTimeout();
         }
     });
-
     if (isLoggedIn) {
         timeout(30);
     }
@@ -835,7 +839,7 @@ function renderVerificationForm() {
 
         let verificationCode = $('#VerificationCode').val();
 
-        let userId = sessionStorage.getItem("User");  
+        let userId = sessionStorage.getItem("User");
 
 
         if (userId) {
@@ -843,7 +847,7 @@ function renderVerificationForm() {
                 userId = JSON.parse(userId);
             } catch (error) {
                 console.error("Error parsing user ID from session storage:", error);
-                userId = null; 
+                userId = null;
             }
         }
 
