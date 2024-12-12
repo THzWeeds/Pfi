@@ -526,10 +526,12 @@ function attach_Posts_UI_Events_Callback() {
     $(".likeCmd").off();
     $(".likeCmd").on("click", function () {
         Posts_API.AddLike($(this).attr("postId"));
+        showPosts();
     });
     $(".unlikeCmd").off();
     $(".unlikeCmd").on("click", function () {
         Posts_API.RemoveLike($(this).attr("postId"));
+        showPosts();
     });
 
     $(".editCmd").off();

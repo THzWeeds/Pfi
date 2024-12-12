@@ -1,6 +1,6 @@
 class Accounts_API {
     static API_URL() {
-        return "http://localhost:5000";
+        return "https://boundless-faint-seeder.glitch.me";
     }
 
     static initHttpState() {
