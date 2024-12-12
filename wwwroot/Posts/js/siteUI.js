@@ -316,12 +316,17 @@ async function renderPosts(queryString) {
     }
     addWaitingGif();
     let response = await Posts_API.GetQuery(queryString);
+    let users = "";
     if (!Posts_API.error) {
+        if (Accounts_API.isLogged())
+        {
+            users = await Accounts_API.GetAllUsers();
+        }
         currentETag = response.ETag;
         let Posts = response.data;
         if (Posts.length > 0) {
             Posts.forEach(Post => {
-                postsPanel.append(renderPost(Post));
+                postsPanel.append(renderPost(Post,users));
             });
         } else
             endOfData = true;
@@ -334,7 +339,7 @@ async function renderPosts(queryString) {
     removeWaitingGif();
     return endOfData;
 }
-function renderPost(post, loggedUser) {
+function renderPost(post, users) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
     let likeCMD = "";
     let usersLiked = "";
@@ -342,21 +347,25 @@ function renderPost(post, loggedUser) {
     {
         console.log(post.LikedUsers.includes(Accounts_API.getUserId()));
         let splitLiked = post.LikedUsers.split("\n");
-        splitLiked.forEach((user) => {
-            if (user != "")
+        
+        console.log(users[0].Id);
+        users.forEach((user) => {
+            console.log(user.Id);
+            console.log(splitLiked[1]);
+            if (post.LikedUsers.includes(user.Id))
             {
-                usersLiked += Accounts_API.GetAllUsers(user).Name + "\n";
+                console.log("in");
+                usersLiked += user.Name + "\n";
             }
-            
         });
-        likeCMD = post.LikedUsers.includes(Accounts_API.getUserId()) ? `<span class="unlikeCmd cmdIconSmall fa-solid fa-thumbs-up" postId="${post.Id}" title="Retirer"></span>` : `<span class="likeCmd cmdIconSmall fa-regular fa-thumbs-up" postId="${post.Id}" title="Ajouter"></span>`;
+        
+        likeCMD = post.LikedUsers.includes(Accounts_API.getUserId()) ? `<span class="unlikeCmd cmdIconSmall fa-solid fa-thumbs-up" postId="${post.Id}" title="Retirer"></span> <span title="${usersLiked}">${post.Likes}</span>` : `<span class="likeCmd cmdIconSmall fa-regular fa-thumbs-up" postId="${post.Id}" title="Ajouter"></span> <span title="${usersLiked}">${post.Likes}</span>`;
     }
     let crudIcon =
         `
         <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
         <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
         ${likeCMD}
-        <span title="${usersLiked}">${post.Likes}</span>
         `;
 
     return $(`
