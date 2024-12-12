@@ -11,6 +11,7 @@ export default class Post extends Model {
         this.addField('Date', 'integer');
         this.addField('Likes','integer');
         this.addField('LikedUsers','string');
+        this.addField('LikedUsersName','string');
         this.setKey("Title");
     }
 }
