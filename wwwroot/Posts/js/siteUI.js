@@ -28,17 +28,15 @@ async function Init_UI() {
 
     $('#createPost').on("click", async function () {
         showCreatePostForm();
-        if (isLoggedIn) 
-            {
-                timeout(30);
-            }
+        if (isLoggedIn) {
+            timeout(30);
+        }
     });
     $('#abort').on("click", async function () {
         showPosts();
-        if (isLoggedIn) 
-            {
-                timeout(30);
-            }
+        if (isLoggedIn) {
+            timeout(30);
+        }
     });
     $('#aboutCmd').on("click", function () {
         showAbout();
@@ -46,30 +44,26 @@ async function Init_UI() {
     $('#modifierProfileCmd').on("click", function () {
         console.log("modifierProfile");
         showUserEditForm();
-        if (isLoggedIn) 
-            {
-                timeout(30);
-            }
+        if (isLoggedIn) {
+            timeout(30);
+        }
     });
     $('#gererUserCmd').on("click", function () {
         showGererUser();
-        if (isLoggedIn) 
-            {
-                timeout(30);
-            }
+        if (isLoggedIn) {
+            timeout(30);
+        }
     });
     $('#signupCmd').on("click", function () {
         showSignUpForm();
-        if (isLoggedIn) 
-            {
-                timeout(30);
-            }
+        if (isLoggedIn) {
+            timeout(30);
+        }
     });
     $("#showSearch").on('click', function () {
         toogleShowKeywords();
         showPosts();
-        if (isLoggedIn) 
-        {
+        if (isLoggedIn) {
             timeout(30);
         }
     });
@@ -82,17 +76,16 @@ async function Init_UI() {
         Accounts_API.Logout();
         if (!Accounts_API.error) {
             sessionStorage.clear();
-            sessionStorage.setItem("sessionExpired", "true"); 
+            sessionStorage.setItem("sessionExpired", "true");
             showConnectForm();
             noTimeout();
         }
     });
-    
-    if (isLoggedIn) 
-        {
-            timeout(30);
-        }
-    
+
+    if (isLoggedIn) {
+        timeout(30);
+    }
+
 }
 
 
@@ -206,6 +199,14 @@ function showConnectForm() {
     $('#commit').hide();
     $("#viewTitle").text("Connexion");
     renderConnectForm();
+}
+function showVerificationForm() {
+    showForm();
+    $("#hiddenIcon").show();
+    $("#hiddenIcon2").show();
+    $('#commit').hide();
+    $("#viewTitle").text("Verification");
+    renderVerificationForm();
 }
 function showGererUser() {
     showForm();
@@ -454,6 +455,7 @@ function updateDropDownMenu() {
         if (!Accounts_API.error) {
             sessionStorage.clear();
             showPosts();
+            noTimeout();
         }
     });
     $('#gererUserCmd').on("click", function () {
@@ -811,17 +813,62 @@ async function renderGererUser(user = null) {
     });
 }
 
+function renderVerificationForm() {
+    $("#form").show();
+    $("#form").empty();
+    $("#form").append(`
+      <form class="form centered" id="verificationForm">
+        <label for="VerificationCode" class="form-label">Code de vérification</label>
+        <input 
+          class="form-control full-width"
+          name="VerificationCode" 
+          id="VerificationCode" 
+          placeholder="Code de vérification"
+          required
+        />
+        <input type="submit" value="Vérifier" id="verifyCode" class="btn btn-primary full-width ">
+      </form>
+    `);
+
+    $('#verificationForm').on("submit", async function (event) {
+        event.preventDefault();
+
+        let verificationCode = $('#VerificationCode').val();
+
+        let userId = sessionStorage.getItem("User");  
+
+
+        if (userId) {
+            try {
+                userId = JSON.parse(userId);
+            } catch (error) {
+                console.error("Error parsing user ID from session storage:", error);
+                userId = null; 
+            }
+        }
+
+        let result = await Accounts_API.verifyCode(userId.Id, verificationCode);
+
+        if (result.success) {
+            timeout(30);
+            await showPosts();
+        } else {
+            alert("Code de vérification incorrect. Veuillez réessayer.");
+        }
+    });
+}
+
 function renderConnectForm(user = null) {
     let create = user == null;
     if (create) user = newConnect();
-    
 
-    let sessionExpiredMessage = sessionStorage.getItem("sessionExpired") ? 
-                                '<div class="text-danger" id="sessionExpiredMessage">Session expirer. Veuillez vous reconnecter.</div>' : 
-                                '';
+
+    let sessionExpiredMessage = sessionStorage.getItem("sessionExpired") ?
+        '<div class="text-danger" id="sessionExpiredMessage">Session expirer. Veuillez vous reconnecter.</div>' :
+        '';
 
     sessionStorage.removeItem("sessionExpired");
-    
+
     $("#form").show();
     $("#form").empty();
     $("#form").append(`
@@ -877,9 +924,14 @@ function renderConnectForm(user = null) {
                 sessionStorage.setItem("Token", result.data.Access_token);
                 sessionStorage.setItem("User", JSON.stringify(result.data.User));
 
-                timeout(30);
 
-                await showPosts();
+                if (Accounts_API.isLogged() && result.data.User.VerifyCode != "verified") {
+                    showVerificationForm();
+                }
+                else {
+                    timeout(30);
+                    await showPosts();
+                }
             } else {
                 console.log("An unexpected error occurred.");
             }
