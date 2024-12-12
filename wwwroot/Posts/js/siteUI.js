@@ -361,22 +361,9 @@ async function renderPosts(queryString) {
 function renderPost(post, users) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
     let likeCMD = "";
-    let usersLiked = "";
     if (Accounts_API.isLogged())
     {
-        console.log(post.LikedUsers.includes(Accounts_API.getUserId()));
-        let splitLiked = post.LikedUsers.split("\n");
-        
-        
-        users.forEach((user) => {
-            if (post.LikedUsers.includes(user.Id))
-            {
-                console.log("in");
-                usersLiked += user.Name + "\n";
-            }
-        });
-        
-        likeCMD = post.LikedUsers.includes(Accounts_API.getUserId()) ? `<span class="unlikeCmd cmdIconSmall fa-solid fa-thumbs-up" postId="${post.Id}" title="Retirer"></span> <span title="${usersLiked}">${post.Likes}</span>` : `<span class="likeCmd cmdIconSmall fa-regular fa-thumbs-up" postId="${post.Id}" title="Ajouter"></span> <span title="${usersLiked}">${post.Likes}</span>`;
+        likeCMD = post.LikedUsers.includes(Accounts_API.getUserId()) ? `<span class="unlikeCmd cmdIconSmall fa-solid fa-thumbs-up" postId="${post.Id}" title="Retirer"></span> <span title="${post.LikedUsersName}">${post.Likes}</span>` : `<span class="likeCmd cmdIconSmall fa-regular fa-thumbs-up" postId="${post.Id}" title="Ajouter"></span> <span title="${post.LikedUsersName}">${post.Likes}</span>`;
     }
     let crudIcon =
         `
@@ -757,6 +744,8 @@ function renderPostForm(post = null) {
         if (post.Likes == null )
         {
             post.Likes = 0;
+            post.LikedUsers = "";
+            post.LikedUsersName = "";
         }
         post = await Posts_API.Save(post, create);
         if (!Posts_API.error) {
