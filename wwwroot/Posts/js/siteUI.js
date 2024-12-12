@@ -875,6 +875,15 @@ async function renderGererUser(user = null) {
 }
 
 function renderVerificationForm() {
+    $('#abort').on("click", function () {
+        if(Accounts_API.isLogged())
+        {
+            Accounts_API.Logout();
+        sessionStorage.clear();
+        noTimeout();
+        showPosts();
+        }
+    });
     $("#form").show();
     $("#form").empty();
     $("#form").append(`
@@ -917,6 +926,7 @@ function renderVerificationForm() {
             alert("Code de vérification incorrect. Veuillez réessayer.");
         }
     });
+    
 }
 
 function renderConnectForm(user = null) {
