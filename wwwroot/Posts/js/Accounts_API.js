@@ -114,7 +114,11 @@ class Accounts_API {
     static async Save(data, create = true)
     {
         Accounts_API.initHttpState();
-        data.Id = this.getUserId();
+        console.log(data);
+        if(!create)
+        {
+            data.Id = this.getUserId();
+        }  
         let token = this.getToken();
         return new Promise(resolve => {
             $.ajax({
@@ -129,6 +133,26 @@ class Accounts_API {
 
 
         });
+    }
+    static async verifyCode(id, code) {
+        this.initHttpState();
+    
+        try {
+          let response = await fetch(this.API_URL() + "/accounts/verify?id=" + id + "&code=" + code, {
+            method: 'GET'
+          });
+    
+          if (!response.ok) {
+            this.setHttpErrorState(response);
+            return { success: false, status: response.status, error: this.currentHttpError };
+          }
+    
+          let data = await response.json();
+          return { success: true, data };
+        } catch (error) {
+          console.error("Network error:", error);
+          return { success: false, error: "Network error occurred" };
+        }
     }
 
     static async BlockUser(data)
